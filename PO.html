@@ -624,6 +624,7 @@ let generatedEmails = [];
 let mphPONum = '';
 let lastLoadedMphPO = '';
 let selectedCustomer = null;
+let currentOrderIsCoastal = false;
 let dropdownTimer = null;
 
 // -- INIT ------------------------------------------------------------------
@@ -912,6 +913,7 @@ async function generatePO() {
     specialInstructions: document.getElementById('specialInstructions').value.trim(),
     isRevised: isRevised && !!revisedNum,
     isBlind: document.getElementById('isBlindShipment').checked,
+    isCoastal: currentOrderIsCoastal,
     vendor, lines, total
   };
 
@@ -1019,7 +1021,13 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '</table>';
   h += '<br>';
-  if (!o.isBlind) h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+  if (!o.isBlind) {
+    if (o.isCoastal) {
+      h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+    } else {
+      h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+    }
+  }
   if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
   h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
@@ -1762,6 +1770,7 @@ function updateImportFooter() {
 function loadSelectedOrder() {
   if (importSelectedIdx === null) return;
   const o = importFiltered[importSelectedIdx];
+  currentOrderIsCoastal = (o.source === 'recycling' && o.sheet === 'Coastal Container');
   document.getElementById("isBlindShipment").checked = false;
   document.getElementById("isRevised").checked = false;
   document.getElementById("revisedPOField").style.display = "none";
