@@ -956,7 +956,7 @@ async function generatePO() {
         to: vEmails.to,
         cc: vEmails.cc,
         subject: `${order.isRevised ? '[REVISED] ' : ''}MPH United PO ${mphPONum}${order.isBlind ? '' : ' -- ' + customerName} | Ship ${order.shipDate}`,
-        body: 'Hello\n\nPlease find below Purchase Order ' + mphPONum + ' from MPH United.\n\nPRODUCTS ORDERED:\n' + descList + '\n\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nMPH PO #: ' + mphPONum + (!order.isBlind ? '\nCustomer PO #: ' + order.customerPO : '') + '\n' + qtyPriceList + (!order.isBlind ? '\n\nSHIP TO: ' + order.customerName + '\n' + order.shipTo : '') + (order.specialInstructions ? '\n\nPO NOTES:\n' + order.specialInstructions : '') + '\n\n' + 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # ' + mphPONum + ' on all correspondence and shipping documents.',
+        body: 'Hello\n\nPlease find below Purchase Order ' + mphPONum + ' from MPH United.\n\nPRODUCTS ORDERED:\n' + descList + '\n\nShip Date: ' + order.shipDate + '\nShip Via: ' + order.shipVia + '\nMPH PO #: ' + mphPONum + (!order.isBlind ? '\nCustomer PO #: ' + order.customerPO : '') + '\n' + qtyPriceList + (!order.isBlind ? '\n\nSHIP TO: ' + order.customerName + '\n' + order.shipTo : '') + (order.specialInstructions ? '\n\nPO NOTES:\n' + order.specialInstructions : '') + '\n\n' + (order.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # ' + mphPONum + ' on all correspondence and shipping documents.',
         bodyHtml: buildVendorEmailHtml(order, vendor, lines, mphPONum)
       }, {
         to: `${customerName} <${order.customerEmail || ''}>`,
@@ -1054,7 +1054,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     }
   }
   if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
-  h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   if (o.isCoastal) {
     h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">BOL is attached to this email.</p>';
     h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">The carrier will contact you to arrange freight.</p>';
