@@ -294,7 +294,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
     <strong>3)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
-    <strong>4)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
+    <strong>4)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong> or <strong>PO Revision to Accounting</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
   <div class="import-body">
     <div class="import-controls">
@@ -1375,8 +1375,8 @@ async function loadOrdersFromSharePoint() {
         const row = rows[r]; if (!row) continue;
         const g = k => String(row[C[k]] ?? "").trim();
         const status = g("status");
-        // Only load orders with "PO REQUEST TO ACCOUNTING" status
-        if (status !== "PO REQUEST TO ACCOUNTING") continue;
+        // Only load orders with qualifying PO statuses
+        if (status !== "PO REQUEST TO ACCOUNTING" && status !== "PO REVISION TO ACCOUNTING") continue;
         const o = {}; for (const k of Object.keys(C)) o[k] = g(k);
         o.sheet = sheetName; orders.push(o);
       }
@@ -1661,7 +1661,7 @@ function renderImportTable() {
     const margin = (b&&s&&s>b) ? ' <span style="color:var(--green);font-size:10px">(+' + (s-b) + ")</span>" : "";
     const st = (o.status||"").replace("WAITING ON VENDOR TO CONFIRM","WAIT VENDOR")
       .replace("WAITING TO CONFIRM TO CUSTOMER","WAIT CUST.").replace("CONFIRMED TO CUSTOMER","CONFIRMED")
-      .replace("SENT ORDER TO CARRIER","SENT").replace("READY TO SHIP","READY").replace("PO REQUEST TO ACCOUNTING","PO REQ");
+      .replace("SENT ORDER TO CARRIER","SENT").replace("READY TO SHIP","READY").replace("PO REQUEST TO ACCOUNTING","PO REQ").replace("PO REVISION TO ACCOUNTING","PO REV");
     const d = o.desc||"—";
     return "<tr onclick=\"selectImportRow("+i+")\" id=\"irow-"+i+"\">" +
       "<td class=\"td-status\"><span class=\"status-pill "+statusPillClass(o.status)+"\">"+st+"</span></td>" +
