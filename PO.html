@@ -756,7 +756,7 @@ function loadVendor() {
   document.getElementById('vcDetail').innerHTML =
     `<strong>Address:</strong> ${v.address.replace(/\n/g,'<br>')}<br>` +
     `<strong>Shipping Contact:</strong> ${v.contact} -- ${v.phone}<br>` +
-    (v.email ? `<strong>Email PO Addresses:</strong> ${v.email}<br>` : '') +
+    (v.email ? `<strong>PO Email Addresses:</strong> ${v.email}<br>` : '') +
     `<strong>Dock:</strong> ${v.dockHours}<br>`;
   document.getElementById('vendorCard').classList.add('active');
 
@@ -1218,7 +1218,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId: "b907c7ac-306b-4b00-b9a6-c639d581d98f",
     authority: "https://login.microsoftonline.com/3abf2937-e518-43e5-b2a4-456eecfa8b00",
-    redirectUri: "https://jackofalltradesit.github.io/MPH/PO.html",
+    redirectUri: "https://mphunited.github.io/Generate/PO.html",
   },
   cache: { cacheLocation: "sessionStorage" }
 };
