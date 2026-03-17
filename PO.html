@@ -1011,12 +1011,14 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  h += '<br>';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:13px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '</table>';
+  h += '<br>';
   if (!o.isBlind) h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
   if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
   h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">Please confirm receipt of this PO and provide expected ship date at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
@@ -1048,7 +1050,8 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:center;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:50px;">Qty</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:100px;">Price</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  h += '<br>';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:13px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
@@ -1056,6 +1059,7 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Payment Terms</td><td style="padding:4px 0;">Net 30</td></tr>';
   h += '</table>';
+  h += '<br>';
   h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
   if (isCPU) {
     h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">CPU Pickup Information</p>';
@@ -1063,6 +1067,7 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
     h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
     if (v.name) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Vendor</td><td style="padding:4px 0;">' + escHtml(v.name) + '</td></tr>';
     if (v.address) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Address</td><td style="padding:4px 0;">' + escHtml(v.address).replace(/\n/g,'<br>') + '</td></tr>';
+    if (v.contact) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Shipping Contact</td><td style="padding:4px 0;">' + escHtml(v.contact) + (v.phone ? ' &mdash; ' + escHtml(v.phone) : '') + '</td></tr>';
     if (v.dockHours) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Dock Hours</td><td style="padding:4px 0;">' + escHtml(v.dockHours) + '</td></tr>';
     h += '</table>';
     h += '<br><p style="line-height:1.6;margin:0;font-size:14px;"><strong>***HAVE MPH PO ' + poNum + ' FOR PICK UP REFERENCE***</strong></p><br>';
