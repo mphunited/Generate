@@ -604,8 +604,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
         <div class="po-actions"><button class="btn-action" id="copyC3" onclick="copyEmail(3,'copyC3')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(3)">✉ Open Email (then paste body)</button></div>
         <div class="email-preview" id="emailDiv3"></div>
       </div>
-    <div class="po-document" id="multiPODocument"></div>
     </div>
+    <div class="po-document" id="multiPODocument"></div>
   </div>
 </div>
 
@@ -1027,18 +1027,19 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     var qty = parseFloat(l.qty) || 0;
     var total = qty * (parseFloat(l.price) || 0);
     var r = '<tr>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;"' + escHtml(poNum||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;"' + escHtml(o.customerPO||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;"' + dh;
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;"' + escHtml(o.shipDate||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;"' + (l.qty||'--') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;"' + fmtCur(l.price) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;"' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
     return r;
   }).join('');
+  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
   h += '<p style="line-height:1.6;margin:0;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United.</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
