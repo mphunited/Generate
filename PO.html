@@ -2052,7 +2052,7 @@ async function generateMultiplePOs() {
   let panelsHtml = orders.map((o, i) =>
     `<div class="output-panel${i===0?' active':''}" id="mpo-panel-${i}">
       <div class="po-actions no-print">
-        <button class="btn-action primary" onclick="printMultiPO(${i})">🖨 Save PO PDF</button>
+        <button class="btn-action primary" onclick="printMultiPO(${i}, '${poNums[i]}')">🖨 Save PO PDF</button>
       </div>
       <div class="po-paper" id="mpo-paper-${i}"></div>
     </div>`
@@ -2097,11 +2097,14 @@ function switchMultiTab(idx, btn) {
   if (panel) panel.classList.add('active');
 }
 
-function printMultiPO(idx) {
+function printMultiPO(idx, poNum) {
   const panels = document.querySelectorAll('#multiPODocument .output-panel');
   panels.forEach((p, i) => { if (i !== idx) p.style.display = 'none'; });
+  const orig = document.title;
+  if (poNum) document.title = 'MPH PO ' + poNum;
   window.print();
   panels.forEach(p => { p.style.display = ''; });
+  setTimeout(() => { document.title = orig; }, 1000);
 }
 
 async function copyMultiPOEmail(btnId) {
