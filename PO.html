@@ -1028,7 +1028,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     var total = qty * (parseFloat(l.price) || 0);
     var r = '<tr>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.isBlind ? '' : (o.customerPO||'')) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
@@ -1043,7 +1043,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<p style="line-height:1.6;margin:0;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find below MPH PO <strong>' + escHtml(poNum) + '</strong> to <strong>' + escHtml(v.name||'') + '</strong>';
-  if (!isCPU) introLine += ' for <strong>' + escHtml(o.customerName) + '</strong>';
+  if (!isCPU && !o.isBlind) introLine += ' for <strong>' + escHtml(o.customerName) + '</strong>';
   introLine += '.';
   h += '<p style="line-height:1.6;margin:0;">' + introLine + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
@@ -2301,6 +2301,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("5 star") || v.includes("five star")) return "fivestar_bristow";
   if (v.includes("southeast") || v.includes("sec ")) return "sec_cleveland";
   if (v.includes("great plains") && v.includes("garden city")) return "gpc_gardencity";
+  if (v.includes("gjl")) return "gjl_sts";
   if (v.includes("superior tote") && v.includes("greenwood")) return "sts_greenwood";
   if (v.includes("superior tote") && v.includes("summitville")) return "sts_summitville";
   if (v.includes("united container")) return "ucg_hillsboro";
