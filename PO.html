@@ -350,7 +350,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
     <!-- REVISED PO TOGGLE -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.2);border-radius:7px;">
-      <input type="checkbox" id="isRevised" onchange="document.getElementById('revisedPOField').style.display=this.checked?'block':'none';if(this.checked&&lastLoadedMphPO){document.getElementById('revisedPONum').value=lastLoadedMphPO;}" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+      <input type="checkbox" id="isRevised" onchange="document.getElementById('revisedPOField').style.display=this.checked?'block':'none';if(this.checked&&lastLoadedMphPO){document.getElementById('revisedPONum').value=lastLoadedMphPO;}generatePO();" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
       <label for="isRevised" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gold);cursor:pointer;flex:1;">Revised PO — Use Existing PO Number</label>
     </div>
     <div id="revisedPOField" style="display:none;margin-bottom:12px;">
@@ -511,7 +511,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="XPO LTL">XPO LTL</option>
           </select>
           <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;">
-            <input type="checkbox" id="isBlindShipment" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
+            <input type="checkbox" id="isBlindShipment" onchange="generatePO();" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
             Blind Shipment
           </label>
         </div>
@@ -553,7 +553,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
         <strong>📂 How to Import PO Requests:</strong><br>
         <strong>1.</strong> Click <em>Import PO Requests from Excel</em>.<br>
         <strong>2.</strong> PO generates automatically. But if you make any changes to any of the fields, click <em>Generate PO</em> at the bottom.<br>
-        <strong>3.</strong> If you are Revising a PO or have a Blind Shipment, make sure to check the boxes.
+        <strong>3.</strong> If you are Revising a PO or have a Blind Shipment, check the appropriate box — the PO will regenerate automatically.
       </div>
       <div style="flex:1;background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;font-size:13px;color:#5a4a00;line-height:1.7;">
         <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
