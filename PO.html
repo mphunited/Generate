@@ -236,6 +236,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 .import-table tbody tr.selected2 { background:rgba(45,106,79,0.12); outline:2px solid rgba(45,106,79,0.4); outline-offset:-2px; }
 .import-table tbody tr.selected3 { background:rgba(59,130,246,0.12); outline:2px solid rgba(59,130,246,0.4); outline-offset:-2px; }
 .import-table tbody tr.selected4 { background:rgba(168,85,247,0.12); outline:2px solid rgba(168,85,247,0.4); outline-offset:-2px; }
+.import-table tbody tr.selected-multi { background:rgba(20,184,166,0.10); outline:2px solid rgba(20,184,166,0.4); outline-offset:-2px; }
 .wr-order-section { border:2px solid var(--gold); border-radius:6px; margin-bottom:16px; overflow:hidden; page-break-inside:avoid; }
 .wr-order-header { background:var(--ink); color:var(--bg); padding:8px 14px; }
 .wr-order-label { display:block; font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:2px; }
@@ -293,7 +294,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>📋 How to Import Orders:</strong>&nbsp;&nbsp;
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
-    <strong>3)</strong> For multiple POs, click all the orders and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
+    <strong>3)</strong> For multiple POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
     <strong>4)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
     <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong> or <strong>PO Revision to Accounting</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
@@ -1360,10 +1361,23 @@ let msalInstance   = null;
 let importAllOrders = [];
 let importFiltered  = [];
 let importSource    = 'orders';  // 'orders' | 'recycling'
-let importSelectedIdx = null;
-let importSelectedIdx2 = null;
-let importSelectedIdx3 = null;
-let importSelectedIdx4 = null;
+let importSelectedIdxs = [];
+
+// Returns the CSS class for a given selection position (0-based)
+function selClass(pos) {
+  return (["selected","selected2","selected3","selected4"])[pos] || "selected-multi";
+}
+
+// Re-applies selection CSS classes to all rows based on current importSelectedIdxs
+function refreshSelectionStyles() {
+  document.querySelectorAll('.import-table tbody tr').forEach(tr => {
+    tr.classList.remove("selected","selected2","selected3","selected4","selected-multi");
+  });
+  importSelectedIdxs.forEach((idx, pos) => {
+    const el = document.getElementById("irow-"+idx);
+    if (el) el.classList.add(selClass(pos));
+  });
+}
 let pollTimer      = null;
 let lastModified   = null;
 
@@ -1546,8 +1560,7 @@ function switchImportSource(src) {
   }
   // Clear current table
   importAllOrders = []; importFiltered = [];
-  importSelectedIdx = null; importSelectedIdx2 = null;
-  importSelectedIdx3 = null; importSelectedIdx4 = null;
+  importSelectedIdxs = [];
   document.getElementById("btnLoadOrder").disabled  = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled  = true;
@@ -1723,10 +1736,7 @@ function filterImportTable() {
     if (q && !([o.customer,o.vendor,o.mph_po,o.cust_po,o.desc,o.freight,o.csr].join(" ").toLowerCase().includes(q))) return false;
     return true;
   });
-  importSelectedIdx = null;
-  importSelectedIdx2 = null;
-  importSelectedIdx3 = null;
-  importSelectedIdx4 = null;
+  importSelectedIdxs = [];
   document.getElementById("btnLoadOrder").disabled = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled = true;
@@ -1785,51 +1795,16 @@ function renderImportTable() {
 }
 
 function selectImportRow(i) {
-  const el = j => document.getElementById("irow-"+j);
-  // Toggle off if already selected — shift remaining selections up
-  if (importSelectedIdx === i) {
-    el(i).classList.remove("selected");
-    importSelectedIdx = importSelectedIdx2; importSelectedIdx2 = importSelectedIdx3; importSelectedIdx3 = importSelectedIdx4; importSelectedIdx4 = null;
-    if (importSelectedIdx !== null) { el(importSelectedIdx).classList.remove("selected2"); el(importSelectedIdx).classList.add("selected"); }
-    if (importSelectedIdx2 !== null) { el(importSelectedIdx2).classList.remove("selected3"); el(importSelectedIdx2).classList.add("selected2"); }
-    if (importSelectedIdx3 !== null) { el(importSelectedIdx3).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3"); }
-    updateImportFooter(); return;
-  }
-  if (importSelectedIdx2 === i) {
-    el(i).classList.remove("selected2");
-    importSelectedIdx2 = importSelectedIdx3; importSelectedIdx3 = importSelectedIdx4; importSelectedIdx4 = null;
-    if (importSelectedIdx2 !== null) { el(importSelectedIdx2).classList.remove("selected3"); el(importSelectedIdx2).classList.add("selected2"); }
-    if (importSelectedIdx3 !== null) { el(importSelectedIdx3).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3"); }
-    updateImportFooter(); return;
-  }
-  if (importSelectedIdx3 === i) {
-    el(i).classList.remove("selected3");
-    importSelectedIdx3 = importSelectedIdx4; importSelectedIdx4 = null;
-    if (importSelectedIdx3 !== null) { el(importSelectedIdx3).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3"); }
-    updateImportFooter(); return;
-  }
-  if (importSelectedIdx4 === i) {
-    el(i).classList.remove("selected4");
-    importSelectedIdx4 = null;
-    updateImportFooter(); return;
-  }
-  // Add new selection
-  if (importSelectedIdx === null) {
-    importSelectedIdx = i; el(i).classList.add("selected");
-  } else if (importSelectedIdx2 === null) {
-    importSelectedIdx2 = i; el(i).classList.add("selected2");
-  } else if (importSelectedIdx3 === null) {
-    importSelectedIdx3 = i; el(i).classList.add("selected3");
-  } else if (importSelectedIdx4 === null) {
-    importSelectedIdx4 = i; el(i).classList.add("selected4");
+  const pos = importSelectedIdxs.indexOf(i);
+  if (pos !== -1) {
+    // Deselect — remove from array
+    importSelectedIdxs.splice(pos, 1);
   } else {
-    // All 4 filled — drop oldest, shift all down, add new as selected4
-    el(importSelectedIdx).classList.remove("selected");
-    importSelectedIdx = importSelectedIdx2; el(importSelectedIdx2).classList.remove("selected2"); el(importSelectedIdx).classList.add("selected");
-    importSelectedIdx2 = importSelectedIdx3; el(importSelectedIdx3).classList.remove("selected3"); el(importSelectedIdx2).classList.add("selected2");
-    importSelectedIdx3 = importSelectedIdx4; el(importSelectedIdx4).classList.remove("selected4"); el(importSelectedIdx3).classList.add("selected3");
-    importSelectedIdx4 = i; el(i).classList.add("selected4");
+    // Add if under limit (20 for Multiple POs)
+    if (importSelectedIdxs.length >= 20) return;
+    importSelectedIdxs.push(i);
   }
+  refreshSelectionStyles();
   updateImportFooter();
 }
 
@@ -1838,39 +1813,44 @@ function updateImportFooter() {
   const btnSplit = document.getElementById("btnLoadSplit");
   const btnMulti = document.getElementById("btnMultiPO");
   const hint = document.getElementById("importFooterHint");
-  const selIdxs = [importSelectedIdx, importSelectedIdx2, importSelectedIdx3, importSelectedIdx4].filter(i => i !== null);
-  const count = selIdxs.length;
+  const count = importSelectedIdxs.length;
   if (count === 0) {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
-    hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
+    hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select up to 20 for Multiple POs";
     return;
   }
-  const names = selIdxs.map(i => importFiltered[i].customer).join("  +  ");
-  const o1 = importFiltered[importSelectedIdx];
+  const names = importSelectedIdxs.map(i => importFiltered[i].customer).join("  +  ");
+  const o1 = importFiltered[importSelectedIdxs[0]];
   if (count === 1) {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     const d = o1.desc||"";
-    hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load";
-  } else {
+    hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load or Multiple POs";
+  } else if (count <= 4) {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4)" : "");
+    hint.textContent = "⚡ Split Load or 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4 for Split Load, max 20 for Multiple POs)" : " • Split Load max reached — click more rows for Multiple POs only");
+  } else {
+    // 5–20: Multiple POs only (Split Load capped at 4)
+    btnLoad.disabled = true;
+    btnSplit.style.display = "none"; btnSplit.disabled = true;
+    btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
+    hint.textContent = "📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
   }
 }
 
 async function loadSelectedOrder() {
-  if (importSelectedIdx === null) return;
+  if (importSelectedIdxs.length === 0) return;
   // Clear any leftover multi-PO output
   const multiDoc = document.getElementById('multiPODocument');
   multiDoc.innerHTML = '';
   multiDoc.classList.remove('active');
   multiPOEmailData = null;
-  const o = importFiltered[importSelectedIdx];
+  const o = importFiltered[importSelectedIdxs[0]];
   currentOrderIsCoastal = (o.source === 'recycling' && o.sheet === 'Coastal Container');
   document.getElementById("isBlindShipment").checked = false;
   document.getElementById("isRevised").checked = false;
@@ -1922,7 +1902,7 @@ async function loadSelectedOrder() {
 }
 
 async function loadAsSplitLoad() {
-  const selIdxs = [importSelectedIdx, importSelectedIdx2, importSelectedIdx3, importSelectedIdx4].filter(i => i !== null);
+  const selIdxs = importSelectedIdxs.slice(0, 4); // Split Load capped at 4
   if (selIdxs.length < 2) return;
   // Clear any leftover multi-PO output
   const multiDoc2 = document.getElementById('multiPODocument');
@@ -2000,7 +1980,7 @@ async function loadAsSplitLoad() {
 }
 
 async function generateMultiplePOs() {
-  const selIdxs = [importSelectedIdx, importSelectedIdx2, importSelectedIdx3, importSelectedIdx4].filter(i => i !== null);
+  const selIdxs = importSelectedIdxs;
   if (selIdxs.length < 2) return;
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const pp = s => { const m=(s||'').match(/[\d.]+/); return m?parseFloat(m[0]):0; };
@@ -2145,11 +2125,11 @@ async function openMultiPOEmail() {
 // ── WASH & RETURN PROGRAM ─────────────────────────────────────────────────
 
 async function loadAsWashReturn() {
-  if (importSelectedIdx === null || importSelectedIdx2 === null || importSelectedIdx3 === null) return;
+  if (importSelectedIdxs.length < 3) return;
   const rawOrders = [
-    importFiltered[importSelectedIdx],
-    importFiltered[importSelectedIdx2],
-    importFiltered[importSelectedIdx3]
+    importFiltered[importSelectedIdxs[0]],
+    importFiltered[importSelectedIdxs[1]],
+    importFiltered[importSelectedIdxs[2]]
   ];
   const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
 
