@@ -181,9 +181,11 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 #toast.show { transform:translateX(-50%) translateY(0); }
 
 @media print {
+  @page { margin: 0; }
   .topbar, .sidebar, .po-actions, .output-tabs, .no-print { display: none !important; }
   .layout { display: block; }
   .main { padding: 0; }
+  body { padding: 0.5in !important; }
   .po-paper { box-shadow: none; border: none; padding: 0; }
   .po-document { display: none !important; }
   .po-document.active { display: block !important; }
@@ -1060,7 +1062,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     r += '</tr>';
     return r;
   }).join('');
-  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:'Aptos',Calibri,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
@@ -1128,7 +1130,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     });
   });
   var poList = poNums.join(', ');
-  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:'Aptos',Calibri,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello,</p><br>';
   var uniqueCustomers = [];
   orders.forEach(function(o) {
@@ -1172,7 +1174,7 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
     return r;
   }).join('');
   var isCPU = o.shipVia && o.shipVia.indexOf('CPU') !== -1;
-  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:'Aptos',Calibri,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello,</p><br>';
   h += '<p style="line-height:1.6;margin:0;">Thank you for this order. We have confirmed your shipping details as follows:</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order Details</p>';
@@ -2272,7 +2274,7 @@ function renderWashReturnPO(orders, vendor, poNum) {
 }
 
 function buildWRVendorEmailHtml(orders, vendor, poNum) {
-  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:'Aptos',Calibri,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello,</p><br>';
   h += '<p style="line-height:1.6;margin:0;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United for the <strong>Wash &amp; Return Program</strong>.</p>';
 
