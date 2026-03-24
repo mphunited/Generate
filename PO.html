@@ -2313,6 +2313,14 @@ function matchVendorKey(v, sheet) {
   if (v.includes("centurion") && v.includes("memphis")) return "centurion_memphis";
   if (v.includes("coastal")) return "coastal_alvin";
   if (v.includes("eco green") || v.includes("ecogreen")) return "ecog_houston";
+  if (v.includes("basco")) return "basco";
+  // Sheet-name fallbacks for when the vendor column is blank or uses a short name
+  if (sheet) {
+    const s = sheet.toLowerCase();
+    if (s.includes("basco")) return "basco";
+    if (s.includes("eco green") || s.includes("ecogreen")) return "ecog_houston";
+    if (s.includes("gjl")) return "gjl_sts";
+  }
   return "";
 }
 
