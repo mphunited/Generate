@@ -185,7 +185,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   .layout { display: block; }
   .main { padding: 0; }
   .po-paper { box-shadow: none; border: none; padding: 0; }
-  .po-document { display: block !important; }
+  .po-document { display: none !important; }
+  .po-document.active { display: block !important; }
 }
 
 /* MODALS */
@@ -2079,7 +2080,7 @@ function switchMultiTab(idx, btn) {
 
 function printMultiPO(idx, poNum) {
   const panels = document.querySelectorAll('#multiPODocument .output-panel');
-  panels.forEach((p, i) => { if (i !== idx) p.style.display = 'none'; });
+  panels.forEach((p, i) => { p.style.display = (i === idx) ? 'block' : 'none'; });
   const orig = document.title;
   if (poNum) document.title = 'MPH PO ' + poNum;
   window.print();
