@@ -842,6 +842,12 @@ function parseToInputDate(s) {
   if (!isNaN(d.getTime())) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   return '';
 }
+// Extract the first number from a mixed string, ignoring any surrounding text.
+function parseNum(s) {
+  if (!s) return '';
+  const m = s.match(/[\d.]+/);
+  return m ? m[0] : '';
+}
 // Parse a semicolon-delimited email string → { to: "Name <first>", toRaw: "first@...", cc: "second@...; third@..." }
 function parseVendorEmails(contact, emailStr) {
   const addrs = (emailStr || '').split(';').map(s => s.trim()).filter(Boolean);
@@ -1905,7 +1911,7 @@ async function loadSelectedOrder() {
   const body = document.getElementById("lineBody");
   body.innerHTML = "";
   const ck = isCore(vk);
-  const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
+  const pp = s => parseNum(s);
   const tr = document.createElement("tr");
   tr.innerHTML = makeRowHTML(o.desc||"", o.pn||"", pp(o.buy), ck);
   body.appendChild(tr);
@@ -1927,7 +1933,7 @@ async function loadAsSplitLoad() {
   multiPOEmailData = null;
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const o1 = rawOrders[0];
-  const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
+  const pp = s => parseNum(s);
   document.getElementById("isBlindShipment").checked = false;
   document.getElementById("isRevised").checked = false;
   document.getElementById("revisedPOField").style.display = "none";
@@ -1999,7 +2005,7 @@ async function generateMultiplePOs() {
   const selIdxs = importSelectedIdxs;
   if (selIdxs.length < 2) return;
   const rawOrders = selIdxs.map(i => importFiltered[i]);
-  const pp = s => { const m=(s||'').match(/[\d.]+/); return m?parseFloat(m[0]):0; };
+  const pp = s => parseFloat(parseNum(s)) || 0;
 
   const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
   const vendor = VENDORS[vk] || { name: rawOrders[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
@@ -2147,7 +2153,7 @@ async function loadAsWashReturn() {
     importFiltered[importSelectedIdxs[1]],
     importFiltered[importSelectedIdxs[2]]
   ];
-  const pp = s => { const m=(s||"").match(/[\d.]+/); return m?m[0]:""; };
+  const pp = s => parseNum(s);
 
   // Vendor from first order
   const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
