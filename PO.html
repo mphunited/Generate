@@ -828,6 +828,19 @@ function getLines() {
 // -- HELPERS ---------------------------------------------------------------
 function fmtCur(n) { return n > 0 ? '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') : '--'; }
 function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
+// Normalize any date string from Excel to yyyy-mm-dd for <input type="date">
+function parseToInputDate(s) {
+  if (!s) return '';
+  // Already ISO: 2026-03-15 or 2026-03-15T00:00:00Z
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  // M/D/YYYY or MM/DD/YYYY (US format from text-formatted cells)
+  const us = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (us) return us[3] + '-' + us[1].padStart(2,'0') + '-' + us[2].padStart(2,'0');
+  // Fallback: let the browser try to parse it
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return '';
+}
 // Parse a semicolon-delimited email string → { to: "Name <first>", toRaw: "first@...", cc: "second@...; third@..." }
 function parseVendorEmails(contact, emailStr) {
   const addrs = (emailStr || '').split(';').map(s => s.trim()).filter(Boolean);
@@ -1003,7 +1016,7 @@ function buildPOHtml(o, poNum) {
       <div class="po-meta-box"><div class="po-meta-label">Vendor</div><div class="po-meta-value">${o.vendor.name}<br><span style="font-size:10px;color:var(--ink2)">${o.vendor.address.replace(/\n/g,'<br>')}</span><br><span style="font-size:10px;color:var(--ink2)">${o.vendor.contact} -- ${o.vendor.phone}</span></div></div>
       ${!o.isBlind ? `<div class="po-meta-box"><div class="po-meta-label">${o.isCoastal ? 'Ship From' : 'Ship To -- ' + o.customerName}</div><div class="po-meta-value" style="font-size:11px">${o.shipTo.replace(/\n/g,'<br>')}</div></div>` : ''}
       ${!o.isBlind ? `<div class="po-meta-box"><div class="po-meta-label">Customer PO #</div><div class="po-meta-value">${o.customerPO}</div></div>` : ''}
-      <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value">${o.shipDate}</div></div>
+      <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value" style="color:#c0392b;font-weight:700;">${o.shipDate}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${o.apptTime ? o.apptTime.replace(/\r\n|\r|\n/g,'<br>') : '--'}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${o.salesOrder||'--'}</div></div>
@@ -1043,8 +1056,8 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
-  var introLine = 'Please find below MPH PO <strong>' + escHtml(poNum) + '</strong> to <strong>' + escHtml(v.name||'') + '</strong>';
-  if (!isCPU && !o.isBlind) introLine += ' for <strong>' + escHtml(o.customerName) + '</strong>';
+  var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
+  if (!isCPU && !o.isBlind) introLine += ' to <strong>' + escHtml(o.customerName) + '</strong>';
   introLine += '.';
   h += '<p style="line-height:1.6;margin:0;">' + introLine + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
@@ -1062,6 +1075,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:13px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
+  if (o.salesOrder) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Sales Order #</td><td style="padding:4px 0;">' + escHtml(o.salesOrder) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '</table>';
@@ -1109,7 +1123,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   var poList = poNums.join(', ');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:14px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;">Hello,</p><br>';
-  h += '<p style="line-height:1.6;margin:0;">Please find below MPH POs <strong>' + escHtml(poList) + '</strong> to <strong>' + escHtml(vendor.name||'') + '</strong>.</p><br>';
+  h += '<p style="line-height:1.6;margin:0;">Please find orders below for <strong>' + escHtml(vendor.name||'') + '</strong>.</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
@@ -1874,8 +1888,8 @@ async function loadSelectedOrder() {
   if (o.pn) document.getElementById("partNumber").value = o.pn;
   if (o.alliance_so) document.getElementById("salesOrder").value = o.alliance_so;
   if (o.appt) document.getElementById("apptTime").value = o.appt;
-  if (o.ship_date) document.getElementById("shipDate").value = o.ship_date.split("T")[0];
-  if (o.wanted_date) document.getElementById("etaDate").value = o.wanted_date.split("T")[0];
+  const _sd = parseToInputDate(o.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
+  const _wd = parseToInputDate(o.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   const notes = o.po_notes || "";
   if (notes) document.getElementById("specialInstructions").value = notes;
@@ -1895,7 +1909,7 @@ async function loadSelectedOrder() {
   tr.innerHTML = makeRowHTML(o.desc||"", o.pn||"", pp(o.buy), ck);
   body.appendChild(tr);
   const qty = tr.querySelector(".li-qty");
-  if (qty && o.qty) qty.value = o.qty;
+  const qtyVal = pp(o.qty); if (qty && qtyVal) qty.value = qtyVal;
   const sellEl = tr.querySelector(".li-sell");
   if (sellEl && o.sell) sellEl.value = pp(o.sell);
   closeImport();
@@ -1938,8 +1952,8 @@ async function loadAsSplitLoad() {
   if (o1.pn) document.getElementById("partNumber").value = o1.pn;
   if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
   if (o1.appt) document.getElementById("apptTime").value = o1.appt;
-  if (o1.ship_date) document.getElementById("shipDate").value = o1.ship_date.split("T")[0];
-  if (o1.wanted_date) document.getElementById("etaDate").value = o1.wanted_date.split("T")[0];
+  const _sd2 = parseToInputDate(o1.ship_date); if (_sd2) document.getElementById("shipDate").value = _sd2;
+  const _wd2 = parseToInputDate(o1.wanted_date); if (_wd2) document.getElementById("etaDate").value = _wd2;
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
   // Notes: label as SPLIT LOAD + collect all non-empty notes labeled by load number
@@ -1971,7 +1985,7 @@ async function loadAsSplitLoad() {
     tr.innerHTML = makeRowHTML("SPLIT LOAD " + (idx+1) + " — " + (o.desc||""), o.pn||"", pp(o.buy), ck);
     body.appendChild(tr);
     const qty = tr.querySelector(".li-qty");
-    if (qty && o.qty) qty.value = o.qty;
+    const qtyVal2 = pp(o.qty); if (qty && qtyVal2) qty.value = qtyVal2;
     const sell = tr.querySelector(".li-sell");
     if (sell && o.sell) sell.value = pp(o.sell);
   });
