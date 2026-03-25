@@ -353,7 +353,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
     <!-- REVISED PO TOGGLE -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;background:rgba(184,134,11,0.06);border:1px solid rgba(184,134,11,0.2);border-radius:7px;">
-      <input type="checkbox" id="isRevised" onchange="document.getElementById('revisedPOField').style.display=this.checked?'block':'none';if(this.checked&&lastLoadedMphPO){document.getElementById('revisedPONum').value=lastLoadedMphPO;}generatePO(true);" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
+      <input type="checkbox" id="isRevised" onchange="document.getElementById('revisedPOField').style.display=this.checked?'block':'none';if(this.checked&&lastLoadedMphPO){document.getElementById('revisedPONum').value=lastLoadedMphPO;}onCheckboxChange();" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
       <label for="isRevised" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gold);cursor:pointer;flex:1;">Revised PO — Use Existing PO Number</label>
     </div>
     <div id="revisedPOField" style="display:none;margin-bottom:12px;">
@@ -520,7 +520,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="XPO LTL">XPO LTL</option>
           </select>
           <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;">
-            <input type="checkbox" id="isBlindShipment" onchange="generatePO(true);" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
+            <input type="checkbox" id="isBlindShipment" onchange="onCheckboxChange();" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
             Blind Shipment
           </label>
         </div>
@@ -1767,14 +1767,15 @@ function closeImport() {
   document.getElementById("importPanel").classList.remove("open");
 }
 
-function onMoveOrdersChange() {
+function onCheckboxChange() {
   const multiDoc = document.getElementById('multiPODocument');
   if (multiDoc && multiDoc.classList.contains('active') && lastMultiPORawOrders.length >= 2) {
-    generateMultiplePOs();
+    generateMultiplePOs(true);
   } else {
     generatePO(true);
   }
 }
+function onMoveOrdersChange() { onCheckboxChange(); }
 
 // ── TABLE ─────────────────────────────────────────────────────────────────
 function filterImportTable() {
@@ -2030,7 +2031,7 @@ async function loadAsSplitLoad() {
   await generatePO();
 }
 
-async function generateMultiplePOs() {
+async function generateMultiplePOs(fromCheckbox = false) {
   const selIdxs = importSelectedIdxs;
   if (selIdxs.length < 2) return;
   const rawOrders = selIdxs.map(i => importFiltered[i]);
@@ -2038,6 +2039,15 @@ async function generateMultiplePOs() {
 
   const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
   const vendor = VENDORS[vk] || { name: rawOrders[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
+
+  // Reset checkboxes only when loading fresh orders from the import panel
+  if (!fromCheckbox) {
+    document.getElementById("isBlindShipment").checked = false;
+    document.getElementById("isRevised").checked = false;
+    document.getElementById("isMoveOrders").checked = false;
+    document.getElementById("revisedPOField").style.display = "none";
+    document.getElementById("revisedPONum").value = "";
+  }
 
   lastMultiPORawOrders = rawOrders;
   setLoading(true, 'Building Multiple POs...', 'Generating PO numbers');
@@ -2104,10 +2114,13 @@ async function generateMultiplePOs() {
   </div>`;
 
   multiDoc.innerHTML = `
-    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
-      <strong>📋 Multiple POs — How to send:</strong><br>
-      <strong>1.</strong> Click each <em>PO tab</em> and <em>Save PO PDF</em> to save each PO separately.<br>
-      <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
+    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
+      <div style="flex:1;">
+        <strong>📋 Multiple POs — How to send:</strong><br>
+        <strong>1.</strong> Click each <em>PO tab</em> and <em>Save PO PDF</em> to save each PO separately.<br>
+        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
+      </div>
+      <button onclick="generateMultiplePOs(true)" style="flex-shrink:0;background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}`;
