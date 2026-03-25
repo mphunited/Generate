@@ -299,7 +299,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
     <strong>3)</strong> For multiple POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
     <strong>4)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
-    <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong> or <strong>PO Revision to Accounting</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
+    <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
   <div class="import-body">
     <div class="import-controls">
@@ -1379,7 +1379,7 @@ const FILE_NAME     = "MPH Orders.xlsm";
 // If the Recycling file is in a different library, update RECYCLING_DRIVE_ID below.
 const RECYCLING_DRIVE_ID   = DRIVE_ID;
 const RECYCLING_FILE_NAME  = "MPH Recycling Orders.xlsm";
-const RECYCLING_STATUSES   = new Set(["PO REQUEST TO ACCOUNTING"]);
+const RECYCLING_STATUSES   = new Set(["PO REQUEST TO ACCOUNTING", "PO REVISION TO ACCOUNTING", "PO MOVING"]);
 const RECYCLING_SHEETS     = [
   'Coastal Container','RRG(Rural Recycling Grinding)','UGC(United Container Group)',
   'STS(Superior Tote Solutions)','SEC(SouthEast Container)','GPC(Great Plains Container)',
@@ -1532,7 +1532,7 @@ async function loadOrdersFromSharePoint() {
         const g = k => String(row[C[k]] ?? "").trim();
         const status = g("status");
         // Only load orders with qualifying PO statuses
-        if (status !== "PO REQUEST TO ACCOUNTING" && status !== "PO REVISION TO ACCOUNTING") continue;
+        if (status !== "PO REQUEST TO ACCOUNTING" && status !== "PO REVISION TO ACCOUNTING" && status !== "PO MOVING") continue;
         const o = {}; for (const k of Object.keys(C)) o[k] = g(k);
         o.sheet = sheetName; orders.push(o);
       }
@@ -1818,7 +1818,7 @@ function renderImportTable() {
     const margin = (b&&s&&s>b) ? ' <span style="color:var(--green);font-size:10px">(+' + (s-b) + ")</span>" : "";
     const st = (o.status||"").replace("WAITING ON VENDOR TO CONFIRM","WAIT VENDOR")
       .replace("WAITING TO CONFIRM TO CUSTOMER","WAIT CUST.").replace("CONFIRMED TO CUSTOMER","CONFIRMED")
-      .replace("SENT ORDER TO CARRIER","SENT").replace("READY TO SHIP","READY").replace("PO REQUEST TO ACCOUNTING","PO REQ").replace("PO REVISION TO ACCOUNTING","PO REV");
+      .replace("SENT ORDER TO CARRIER","SENT").replace("READY TO SHIP","READY").replace("PO REQUEST TO ACCOUNTING","PO REQ").replace("PO REVISION TO ACCOUNTING","PO REV").replace("PO MOVING","PO MOVE");
     const d = o.desc||"—";
     return "<tr onclick=\"selectImportRow("+i+")\" id=\"irow-"+i+"\">" +
       "<td class=\"td-status\"><span class=\"status-pill "+statusPillClass(o.status)+"\">"+st+"</span></td>" +
