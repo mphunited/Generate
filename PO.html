@@ -2044,6 +2044,7 @@ async function generateMultiplePOs() {
   closeImport();
 
   const isMoveOrders = document.getElementById('isMoveOrders').checked;
+  const isBlindMulti = document.getElementById('isBlindShipment').checked;
   const poNums = [];
   for (const ro of rawOrders) {
     poNums.push((isMoveOrders && ro.mph_po) ? ro.mph_po : await genPONum());
@@ -2063,7 +2064,7 @@ async function generateMultiplePOs() {
       salesOrder: ro.alliance_so || '',
       specialInstructions: ro.po_notes || '',
       isRevised: false,
-      isBlind: false,
+      isBlind: isBlindMulti,
       isCoastal,
       vendor,
       lines: [{ desc: ro.desc||'IBC Product', pn: ro.pn||'', qty: pp(ro.qty)||1, price: pp(ro.buy), sell: pp(ro.sell) }],
