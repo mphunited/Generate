@@ -176,16 +176,16 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 .email-row:last-child { margin-bottom: 0; }
 .email-row-label { font-size: 10px; font-weight: 600; color: var(--gold); width: 55px; flex-shrink: 0; text-transform: uppercase; }
 .email-row-val { color: var(--ink); font-family: 'Aptos', 'Inter', sans-serif; font-size: 12px; }
-.email-preview-body { padding: 20px; font-size: 13.5px; line-height: 1.8; color: var(--ink); }
+.email-preview-body { padding: 20px; font-size: 12px; line-height: 1.8; color: var(--ink); }
 #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:#1a1612; color:#f2ede6; padding:12px 24px; border-radius:8px; font-size:13px; font-family:'Aptos','Inter',sans-serif; transition:transform 0.3s ease; z-index:9999; white-space:nowrap; pointer-events:none; box-shadow:0 4px 16px rgba(26,22,18,0.3); }
 #toast.show { transform:translateX(-50%) translateY(0); }
 
 @media print {
   @page { margin: 0; }
   .topbar, .sidebar, .po-actions, .output-tabs, .no-print { display: none !important; }
-  .layout { display: block; }
-  .main { padding: 0; }
-  body { padding: 0.5in !important; }
+  .layout { display: block; min-height: 0 !important; }
+  .main { padding: 0; min-height: 0 !important; }
+  body { padding: 0.5in !important; min-height: 0 !important; }
   .po-paper { box-shadow: none; border: none; padding: 0; }
   .po-document { display: none !important; }
   .po-document.active { display: block !important; }
@@ -1058,15 +1058,15 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     var qty = parseFloat(l.qty) || 0;
     var total = qty * (parseFloat(l.price) || 0);
     var r = '<tr>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
-    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
+    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
     return r;
   }).join('');
@@ -1089,7 +1089,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
   h += '<br>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:13px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   if (o.salesOrder) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Sales Order #</td><td style="padding:4px 0;">' + escHtml(o.salesOrder) + '</td></tr>';
@@ -1099,16 +1099,16 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<br>';
   if (!o.isBlind) {
     if (o.isCoastal) {
-      h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+      h += '<p style="line-height:1.6;margin:0;font-size:12px;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
     } else {
-      h += '<p style="line-height:1.6;margin:0;font-size:13px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+      h += '<p style="line-height:1.6;margin:0;font-size:12px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
     }
   }
-  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
-  h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   if (o.isCoastal) {
-    h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">BOL is attached to this email.</p>';
-    h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">The carrier will contact you to arrange freight.</p>';
+    h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">BOL is attached to this email.</p>';
+    h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">The carrier will contact you to arrange freight.</p>';
   }
   h += '</td></tr></table>';
   return h;
@@ -1124,15 +1124,15 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       var qty = parseFloat(l.qty) || 0;
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
-      if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
+      if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
       allRows += r;
     });
@@ -1162,10 +1162,10 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + allRows + '</tbody></table>';
   h += '<br>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:13px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
   h += '</table>';
-  h += '<br><p style="line-height:1.6;margin:0;font-size:13px;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -2320,18 +2320,18 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
       var qty = parseFloat(l.qty) || 0;
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
       return r;
     }).join('');
 
     h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order ' + (idx+1) + ' — ' + escHtml(o.customerName) + '</p>';
-    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:13px;">';
+    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:12px;">';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:3px 0;">' + escHtml(o.customerPO) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:3px 0;">' + escHtml(o.shipDate) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship To</td><td style="padding:3px 0;">' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</td></tr>';
@@ -2343,14 +2343,14 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
     h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
     h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
     h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:13px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
   });
 
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:13px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">CPU — Wash &amp; Return</td></tr>';
   h += '</table>';
-  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:13px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:12px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
