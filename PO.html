@@ -1551,9 +1551,6 @@ async function loadOrdersFromSharePoint() {
     setImportStatus("live", orders.length, sheetsFound.length, meta.lastModifiedDateTime);
     filterImportTable();
 
-    // Poll for changes
-    if (!pollTimer) pollTimer = setInterval(pollChanges, POLL_INTERVAL);
-
   } catch(e) {
     if (e.message === "not_signed_in") setImportStatus("signin");
     else setImportStatus("error", 0, 0, "", e.message);
@@ -1701,8 +1698,6 @@ async function loadRecyclingOrdersFromSharePoint() {
     setImportStatus("live", orders.length, sheetsFound.length, meta.lastModifiedDateTime);
     filterImportTable();
 
-    if (!pollTimer) pollTimer = setInterval(pollChanges, POLL_INTERVAL);
-
   } catch(e) {
     if (e.message === "not_signed_in") setImportStatus("signin");
     else setImportStatus("error", 0, 0, "", e.message);
@@ -1731,7 +1726,7 @@ function setImportStatus(state, count, sheets, modified, err) {
       const s = Math.round((Date.now() - new Date(modified).getTime()) / 1000);
       ago = s < 60 ? s + "s ago" : s < 3600 ? Math.round(s/60) + "m ago" : Math.round(s/3600) + "h ago";
     }
-    sub2.textContent = count + " live orders • refreshes every " + (POLL_INTERVAL/1000) + "s" + (ago ? " • saved " + ago : "");
+    sub2.textContent = count + " live orders" + (ago ? " • saved " + ago : "");
   } else if (state === "loading") {
     dot.style.display = "none"; zone.classList.remove("loaded");
     icon.textContent = "⏳"; label.textContent = "Loading orders from SharePoint…";
