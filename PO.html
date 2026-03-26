@@ -776,6 +776,16 @@ function escHtml(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function parseCityState(addr) {
+  if (!addr) return '';
+  var lines = addr.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l; });
+  for (var i = lines.length - 1; i >= 0; i--) {
+    var m = lines[i].match(/^(.+),\s*([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+    if (m) return m[1].trim() + ', ' + m[2];
+  }
+  return '';
+}
+
 function makeRowHTML(desc, pn, price, showPN) {
   const safeDesc = escHtml(desc||'');
   const safePn   = escAttr(pn||'');
@@ -1074,7 +1084,13 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
-  if (!isCPU && !o.isBlind) introLine += ' to <strong>' + escHtml(o.customerName) + '</strong>';
+  var vendorCS = parseCityState(v.address||'');
+  if (vendorCS) introLine += ' -- ' + escHtml(vendorCS);
+  if (!isCPU && !o.isBlind) {
+    var customerCS = parseCityState(o.shipTo||'');
+    introLine += ' to <strong>' + escHtml(o.customerName) + '</strong>';
+    if (customerCS) introLine += ' - ' + escHtml(customerCS);
+  }
   introLine += '.';
   h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + introLine + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
@@ -1140,13 +1156,23 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   var poList = poNums.join(', ');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello,</p><br>';
-  var uniqueCustomers = [];
+  var customerEntries = [];
+  var seenCustomers = {};
   orders.forEach(function(o) {
     var name = (o.customerName||'').trim();
-    if (!o.isBlind && name && name.toUpperCase() !== 'CPU' && uniqueCustomers.indexOf(name) === -1) uniqueCustomers.push(name);
+    if (!o.isBlind && name && name.toUpperCase() !== 'CPU' && !seenCustomers[name]) {
+      seenCustomers[name] = true;
+      customerEntries.push({ name: name, cityState: parseCityState(o.shipTo||'') });
+    }
   });
   var multiIntro = 'Please find orders below for <strong>' + escHtml(vendor.name||'') + '</strong>';
-  if (uniqueCustomers.length > 0) multiIntro += ' to <strong>' + uniqueCustomers.map(function(n){return escHtml(n);}).join(', ') + '</strong>';
+  var vendorCSMulti = parseCityState(vendor.address||'');
+  if (vendorCSMulti) multiIntro += ' -- ' + escHtml(vendorCSMulti);
+  if (customerEntries.length > 0) {
+    multiIntro += ' to <strong>' + customerEntries.map(function(e){
+      return escHtml(e.name) + (e.cityState ? ' - ' + escHtml(e.cityState) : '');
+    }).join(', ') + '</strong>';
+  }
   multiIntro += '.';
   h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + multiIntro + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
@@ -1258,7 +1284,7 @@ function copyEl(id, btnId, reset) {
 function copyEmail(idx, btnId) {
   const e = generatedEmails[idx];
   const htmlSrc = e.bodyHtml || e.body || '';
-  const html = `<html><body>${htmlSrc}</body></html>`;
+  const html = `<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`;
   const blob = new Blob([html], { type: 'text/html' });
   const plain = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   navigator.clipboard.write([new ClipboardItem({ 'text/html': blob, 'text/plain': plain })]);
@@ -1278,7 +1304,7 @@ async function openInOutlook(idx) {
 
   // Copy the HTML body to clipboard FIRST (await so it completes before mailto fires)
   const htmlSrc = e.bodyHtml || e.body || '';
-  const htmlBlob = new Blob([`<html><body>${htmlSrc}</body></html>`], { type: 'text/html' });
+  const htmlBlob = new Blob([`<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`], { type: 'text/html' });
   const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
@@ -2162,7 +2188,7 @@ function printMultiPO(idx, poNum) {
 async function copyMultiPOEmail(btnId) {
   if (!multiPOEmailData) return;
   const htmlSrc = multiPOEmailData.bodyHtml || '';
-  const htmlBlob = new Blob([`<html><body>${htmlSrc}</body></html>`], { type: 'text/html' });
+  const htmlBlob = new Blob([`<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`], { type: 'text/html' });
   const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
@@ -2181,7 +2207,7 @@ async function openMultiPOEmail() {
   const ccMatches = (multiPOEmailData.cc||'').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
   const ccAddr = ccMatches.join(';');
   const htmlSrc = multiPOEmailData.bodyHtml || '';
-  const htmlBlob = new Blob([`<html><body>${htmlSrc}</body></html>`], { type: 'text/html' });
+  const htmlBlob = new Blob([`<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`], { type: 'text/html' });
   const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
