@@ -1848,9 +1848,6 @@ function renderImportTable() {
   }
   if (!importAllOrders.length) return;
   const rows = importFiltered.map((o,i) => {
-    const b = parseFloat((o.buy||"").replace(/[^0-9.]/g,""))||0;
-    const s = parseFloat((o.sell||"").replace(/[^0-9.]/g,""))||0;
-    const margin = (b&&s&&s>b) ? ' <span style="color:var(--green);font-size:10px">(+' + (s-b) + ")</span>" : "";
     const st = (o.status||"").replace("WAITING ON VENDOR TO CONFIRM","WAIT VENDOR")
       .replace("WAITING TO CONFIRM TO CUSTOMER","WAIT CUST.").replace("CONFIRMED TO CUSTOMER","CONFIRMED")
       .replace("SENT ORDER TO CARRIER","SENT").replace("READY TO SHIP","READY").replace("PO REQUEST TO ACCOUNTING","PO REQ").replace("PO REVISION TO ACCOUNTING","PO REV").replace("PO MOVING","PO MOVE");
@@ -1862,7 +1859,7 @@ function renderImportTable() {
       "<td style=\"white-space:nowrap\">"+(o.cust_po||"—")+"</td>" +
       "<td class=\"td-desc\">"+(d.length>90?d.slice(0,90)+"…":d)+"</td>" +
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.qty||"—")+"</td>" +
-      "<td style=\"text-align:right;white-space:nowrap\">"+(o.buy||"—")+margin+"</td>" +
+      "<td style=\"text-align:right;white-space:nowrap\">"+(o.buy||"—")+"</td>" +
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.sell||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+fmtDate(o.ship_date)+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
