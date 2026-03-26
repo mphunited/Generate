@@ -1071,12 +1071,12 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     return r;
   }).join('');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="line-height:1.6;margin:0;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
   if (!isCPU && !o.isBlind) introLine += ' to <strong>' + escHtml(o.customerName) + '</strong>';
   introLine += '.';
-  h += '<p style="line-height:1.6;margin:0;">' + introLine + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + introLine + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
@@ -1139,7 +1139,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   });
   var poList = poNums.join(', ');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="line-height:1.6;margin:0;">Hello,</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello,</p><br>';
   var uniqueCustomers = [];
   orders.forEach(function(o) {
     var name = (o.customerName||'').trim();
@@ -1148,7 +1148,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   var multiIntro = 'Please find orders below for <strong>' + escHtml(vendor.name||'') + '</strong>';
   if (uniqueCustomers.length > 0) multiIntro += ' to <strong>' + uniqueCustomers.map(function(n){return escHtml(n);}).join(', ') + '</strong>';
   multiIntro += '.';
-  h += '<p style="line-height:1.6;margin:0;">' + multiIntro + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + multiIntro + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
