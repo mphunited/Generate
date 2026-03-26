@@ -1194,11 +1194,18 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   var notesOrders = orders.filter(function(o) { return o.specialInstructions && o.specialInstructions.trim(); });
   if (notesOrders.length > 0) {
     h += '<br>';
-    notesOrders.forEach(function(o, i) {
-      var poNum = poNums[orders.indexOf(o)];
-      var label = notesOrders.length > 1 ? 'PO Notes (' + escHtml(poNum||'') + ')' : 'PO Notes';
-      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12px;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
-    });
+    var uniqueEmailNotes = notesOrders.map(function(o) { return o.specialInstructions.trim(); })
+      .filter(function(v, i, a) { return a.indexOf(v) === i; });
+    if (uniqueEmailNotes.length === 1) {
+      // All orders share the same note — show it once without PO labels
+      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(uniqueEmailNotes[0]).replace(/\n/g,'<br>') + '</div>';
+    } else {
+      notesOrders.forEach(function(o, i) {
+        var poNum = poNums[orders.indexOf(o)];
+        var label = notesOrders.length > 1 ? 'PO Notes (' + escHtml(poNum||'') + ')' : 'PO Notes';
+        h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12px;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+      });
+    }
   }
   h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
@@ -2021,12 +2028,20 @@ async function loadAsSplitLoad() {
   const _wd2 = parseToInputDate(o1.wanted_date); if (_wd2) document.getElementById("etaDate").value = _wd2;
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
-  // Notes: label as SPLIT LOAD + collect all non-empty notes labeled by load number
-  const labeledNotes = rawOrders.map((o, idx) => {
-    const note = (o.po_notes || "").trim();
-    return note ? "Split Load " + (idx + 1) + ": " + note : null;
-  }).filter(Boolean);
-  const splitNotesText = labeledNotes.join("\n\n");
+  // Notes: if all non-empty notes are identical, show once; otherwise label by load number
+  const allRawNotes = rawOrders.map(o => (o.po_notes || "").trim()).filter(Boolean);
+  const uniqueRawNotes = allRawNotes.filter((v, i, a) => a.indexOf(v) === i);
+  let splitNotesText;
+  if (uniqueRawNotes.length === 1) {
+    // All orders share the same note — no need to repeat it
+    splitNotesText = uniqueRawNotes[0];
+  } else {
+    const labeledNotes = rawOrders.map((o, idx) => {
+      const note = (o.po_notes || "").trim();
+      return note ? "Split Load " + (idx + 1) + ": " + note : null;
+    }).filter(Boolean);
+    splitNotesText = labeledNotes.join("\n\n");
+  }
   document.getElementById("specialInstructions").value = splitNotesText;
 
   // Vendor from first order
