@@ -1165,6 +1165,15 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
   h += '</table>';
+  var notesOrders = orders.filter(function(o) { return o.specialInstructions && o.specialInstructions.trim(); });
+  if (notesOrders.length > 0) {
+    h += '<br>';
+    notesOrders.forEach(function(o, i) {
+      var poNum = poNums[orders.indexOf(o)];
+      var label = notesOrders.length > 1 ? 'PO Notes (' + escHtml(poNum||'') + ')' : 'PO Notes';
+      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12px;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+    });
+  }
   h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
