@@ -271,6 +271,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <div class="topbar">
   <div class="topbar-brand">
@@ -662,6 +663,7 @@ let multiPOEmailData = null;
 let mphPONum = '';
 let lastLoadedMphPO = '';
 let lastMultiPORawOrders = [];
+let lastMultiPOPoNums = [];
 let selectedCustomer = null;
 let currentOrderIsCoastal = false;
 let dropdownTimer = null;
@@ -2102,6 +2104,7 @@ async function generateMultiplePOs(fromCheckbox = false) {
   for (const ro of rawOrders) {
     poNums.push((isMoveOrders && ro.mph_po) ? ro.mph_po : await genPONum());
   }
+  lastMultiPOPoNums = poNums;
 
   const orders = rawOrders.map((ro, i) => {
     const isCoastal = (ro.source === 'recycling' && ro.sheet === 'Coastal Container');
@@ -2160,10 +2163,13 @@ async function generateMultiplePOs(fromCheckbox = false) {
     <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
       <div style="flex:1;">
         <strong>📋 Multiple POs — How to send:</strong><br>
-        <strong>1.</strong> Click each <em>PO tab</em> and <em>Save PO PDF</em> to save each PO separately.<br>
+        <strong>1.</strong> Click <em>⬇ Download All PDFs</em> to auto-download every PO at once, <em>or</em> click each PO tab and <em>Save PO PDF</em> individually.<br>
         <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
       </div>
-      <button onclick="generateMultiplePOs(true)" style="flex-shrink:0;background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#3a8a65'" onmouseout="this.style.background='#2d6a4f'">⬇ Download All PDFs</button>
+        <button onclick="generateMultiplePOs(true)" style="background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
+      </div>
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}`;
@@ -2195,6 +2201,37 @@ function printMultiPO(idx, poNum) {
   window.print();
   panels.forEach(p => { p.style.display = ''; });
   setTimeout(() => { document.title = orig; }, 1000);
+}
+
+async function downloadAllMultiPOs() {
+  const count = lastMultiPOPoNums.length;
+  if (!count) return;
+  const btn = document.getElementById('btn-download-all-pos');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating PDFs…'; }
+  showToast('Generating ' + count + ' PDF' + (count > 1 ? 's' : '') + '…', 4000);
+  try {
+    for (let i = 0; i < count; i++) {
+      const paper = document.getElementById('mpo-paper-' + i);
+      if (!paper) continue;
+      const poNum = lastMultiPOPoNums[i];
+      if (btn) btn.textContent = '⏳ PDF ' + (i + 1) + ' of ' + count + '…';
+      await html2pdf()
+        .set({
+          margin: [0.45, 0.45, 0.45, 0.45],
+          filename: 'MPH PO ' + poNum + '.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        })
+        .from(paper)
+        .save();
+      await new Promise(r => setTimeout(r, 400));
+    }
+    showToast('✅ All ' + count + ' PDFs downloaded!', 3500);
+  } catch(e) {
+    showToast('Error generating PDFs. Try saving individually.', 4000);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '⬇ Download All PDFs'; }
 }
 
 async function copyMultiPOEmail(btnId) {
