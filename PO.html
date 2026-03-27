@@ -658,6 +658,44 @@ const VENDORS = {
   ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]}
 };
 
+// -- VENDOR GREETINGS -------------------------------------------------------
+const VENDOR_GREETINGS = {
+  "MPH United / Core -- Houston, TX":                          "Brijesh",
+  "MPH United / Core -- Nashua, IA":                          "Brijesh",
+  "MPH United / Core -- Shreveport, LA":                      "Brijesh",
+  "MPH United / Core -- South Holland, IL":                   "Brijesh",
+  "MPH United / Core -- Waterloo, IA":                        "Brijesh",
+  "MPH United / Core -- Calhoun, GA":                         "Brijesh",
+  "MPH United / Alliance Container -- Greenwood, IN":         "Jessica",
+  "MPH United / Alliance Container Texas -- Hillsboro, TX":   "Alliance Container Texas",
+  "MPH United / Eco Green -- Houston, TX":                    "Sam",
+  "MPH United / 5 Star Industrial Containers -- Bristow, OK": "5 Star",
+  "MPH United / SEC SouthEast Container -- Cleveland, MS":    "SEC",
+  "MPH United / GPC Great Plains Container -- Garden City, KS": "GPC",
+  "MPH United / STS Superior Tote Solutions -- Greenwood, IN":  "Kelly",
+  "MPH United / United Container Group -- Hillsboro, TX":     "AJ",
+  "MPH United / TTW Texas Tote Works -- Odessa, TX":          "TTW",
+  "MPH United / TLD Ted Levine Drum Co -- South El Monte, CA":"David",
+  "MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA": "Michelle",
+  "MPH United / Clean Environmental -- St. Louis, MO":        "Breana",
+  "MPH United / STS Superior Tote Solutions -- Summitville, IN": "Kelly",
+  "MPH United / Centurion -- Lewisburg, TN":                  "Clint",
+  "MPH United / Centurion -- Memphis, TN":                    "Clint",
+  "MPH United / Coastal Container Services -- Alvin, TX":     "Coastal Container",
+  "GJL / STS":                                                "Tony",
+  "ENGY Container Products":                                  "ENGY",
+  "Presley Enterprises":                                      "Presley",
+  "EMP (Enterprise Marking Product)":                         "EMP",
+  "Tri-Sure":                                                 "Tri-Sure",
+  "Container Connectionz":                                    "Brian",
+  "Basco":                                                    "Sheila",
+  "MPH United / Advatech Industries":                         "Darshan",
+};
+function getVendorGreeting(vendor) {
+  if (!vendor || !vendor.name) return '';
+  return VENDOR_GREETINGS[vendor.name] || '';
+}
+
 // -- STATE -----------------------------------------------------------------
 let generatedEmails = [];
 let multiPOEmailData = null;
@@ -878,6 +916,25 @@ function parseVendorEmails(contact, emailStr) {
   const cc     = addrs.slice(1).join('; ');
   return { to: toFmt, toRaw, cc };
 }
+// Parse customer contacts field — supports semicolon-separated entries of
+// plain emails (john@co.com) or named format (John Smith <john@co.com>), or any mix.
+// Returns { toFmt: first entry as-is, email: bare email from first entry, cc: remaining entries }
+function parseCustomerContacts(contactsStr) {
+  const line = (contactsStr || '').split('\n')[0];
+  const entries = line.split(';').map(s => s.trim()).filter(Boolean);
+  if (!entries.length) return { toFmt: '', email: '', cc: '' };
+  const first = entries[0];
+  const m = first.match(/<([^>]+)>/);
+  const email = m ? m[1].trim() : first;
+  return { toFmt: first, email, cc: entries.slice(1).join('; ') };
+}
+// Format customer To: field — if contactFmt already has "Name <email>", use it;
+// otherwise wrap the bare email with the customer's name.
+function fmtCustomerTo(contactFmt, fallbackName) {
+  if (!contactFmt) return '';
+  if (/<[^>]+>/.test(contactFmt)) return contactFmt;
+  return fallbackName ? fallbackName + ' <' + contactFmt + '>' : contactFmt;
+}
 function getSignedInInitials() {
   try {
     const accounts = msalInstance ? msalInstance.getAllAccounts() : [];
@@ -1084,7 +1141,8 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     return r;
   }).join('');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (o.isCoastal ? ' Coastal Container,' : ',') + '</p><br>';
+  var vGreeting = getVendorGreeting(v);
+  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (vGreeting ? ' ' + vGreeting + ',' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
   var vendorCS = parseCityState(v.address||'');
@@ -1107,11 +1165,11 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
+  if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
   h += '<br>';
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
-  if (o.salesOrder) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Sales Order #</td><td style="padding:4px 0;">' + escHtml(o.salesOrder) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '</table>';
@@ -1158,7 +1216,8 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   });
   var poList = poNums.join(', ');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello,</p><br>';
+  var mpoGreeting = getVendorGreeting(vendor);
+  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (mpoGreeting ? ' ' + mpoGreeting + ',' : ',') + '</p><br>';
   var customerEntries = [];
   var seenCustomers = {};
   orders.forEach(function(o) {
@@ -1190,6 +1249,8 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + allRows + '</tbody></table>';
+  var multiSOs = orders.map(function(o){ return o.salesOrder||''; }).filter(function(v){ return v; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+  if (multiSOs.length > 0) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(multiSOs.join(', ')) + '</p>';
   h += '<br>';
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
@@ -1284,6 +1345,37 @@ function switchTab(idx, btn) {
   document.getElementById('outPanel'+idx).classList.add('active');
 }
 
+// Mac-compatible HTML clipboard copy.
+// navigator.clipboard.write() with text/html does NOT reliably deliver styled HTML
+// to Outlook on Mac — Mac apps read WebArchive/NSHTMLPboardType, not the browser's
+// text/html MIME type. execCommand('copy') uses the browser's native copy path,
+// which on Mac correctly writes the WebArchive format Outlook expects.
+// Also uses 12pt (not 12px) so Outlook's font-size picker shows "12".
+function copyEmailHtmlShared(htmlSrc) {
+  const el = document.createElement('div');
+  el.setAttribute('contenteditable', 'true');
+  el.style.cssText = 'position:fixed;top:-99999px;left:-99999px;width:800px;opacity:0.01;pointer-events:none;';
+  el.innerHTML = '<div style="font-size:12pt;font-family:\'Aptos\',Calibri,sans-serif;">' + htmlSrc + '</div>';
+  document.body.appendChild(el);
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) {}
+  sel.removeAllRanges();
+  document.body.removeChild(el);
+  if (!ok) {
+    // Fallback: navigator.clipboard.write (Windows / non-Mac paths)
+    const blob = new Blob(['<html><body style="font-size:12pt;font-family:\'Aptos\',Calibri,sans-serif;">' + htmlSrc + '</body></html>'], { type: 'text/html' });
+    const plain = new Blob([htmlSrc.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
+    return navigator.clipboard.write([new ClipboardItem({ 'text/html': blob, 'text/plain': plain })]);
+  }
+  return Promise.resolve();
+}
+
 function copyEl(id, btnId, reset) {
   navigator.clipboard.writeText(document.getElementById(id).innerText);
   const btn = document.getElementById(btnId);
@@ -1294,10 +1386,7 @@ function copyEl(id, btnId, reset) {
 function copyEmail(idx, btnId) {
   const e = generatedEmails[idx];
   const htmlSrc = e.bodyHtml || e.body || '';
-  const html = `<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`;
-  const blob = new Blob([html], { type: 'text/html' });
-  const plain = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
-  navigator.clipboard.write([new ClipboardItem({ 'text/html': blob, 'text/plain': plain })]);
+  copyEmailHtmlShared(htmlSrc);
   const btn = document.getElementById(btnId);
   btn.textContent='(ok) Copied!'; btn.classList.add('copied');
   setTimeout(()=>{btn.textContent='📋 Copy HTML Body';btn.classList.remove('copied');},2000);
@@ -1314,10 +1403,8 @@ async function openInOutlook(idx) {
 
   // Copy the HTML body to clipboard FIRST (await so it completes before mailto fires)
   const htmlSrc = e.bodyHtml || e.body || '';
-  const htmlBlob = new Blob([`<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`], { type: 'text/html' });
-  const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   try {
-    await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
+    await copyEmailHtmlShared(htmlSrc);
   } catch(err) {
     await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,''));
   }
@@ -1951,7 +2038,7 @@ async function loadSelectedOrder() {
   if (cm) { selectCustomer(cm.name); }
   else {
     if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
-    if (o.contacts) document.getElementById("customerEmail").value = (o.contacts||"").split("\n")[0].trim();
+    if (o.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o.contacts).email;
     document.getElementById("customerCard").classList.remove("active");
   }
   if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
@@ -2014,7 +2101,7 @@ async function loadAsSplitLoad() {
   if (cm) { selectCustomer(cm.name); }
   else {
     if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
-    if (o1.contacts) document.getElementById("customerEmail").value = (o1.contacts||"").split("\n")[0].trim();
+    if (o1.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o1.contacts).email;
     document.getElementById("customerCard").classList.remove("active");
   }
 
@@ -2114,7 +2201,9 @@ async function generateMultiplePOs(fromCheckbox = false) {
       customerPO: ro.cust_po || 'N/A',
       orderDate: fmtDate(new Date().toISOString().split('T')[0]),
       shipTo: ro.ship_to || '--',
-      customerEmail: ro.contacts ? ro.contacts.split('\n')[0].trim() : '',
+      customerEmail: parseCustomerContacts(ro.contacts).email,
+      customerContactFmt: parseCustomerContacts(ro.contacts).toFmt,
+      customerContactCc: parseCustomerContacts(ro.contacts).cc,
       shipDate: fmtDate(ro.ship_date),
       shipVia: ro.freight || '',
       apptTime: ro.appt || '',
@@ -2250,10 +2339,8 @@ async function downloadAllMultiPOs() {
 async function copyMultiPOEmail(btnId) {
   if (!multiPOEmailData) return;
   const htmlSrc = multiPOEmailData.bodyHtml || '';
-  const htmlBlob = new Blob([`<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`], { type: 'text/html' });
-  const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   try {
-    await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
+    await copyEmailHtmlShared(htmlSrc);
   } catch(err) {
     await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,''));
   }
@@ -2269,10 +2356,8 @@ async function openMultiPOEmail() {
   const ccMatches = (multiPOEmailData.cc||'').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
   const ccAddr = ccMatches.join(';');
   const htmlSrc = multiPOEmailData.bodyHtml || '';
-  const htmlBlob = new Blob([`<html><body style="font-size:12px;font-family:'Aptos',Calibri,sans-serif;">${htmlSrc}</body></html>`], { type: 'text/html' });
-  const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g,'')], { type: 'text/plain' });
   try {
-    await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
+    await copyEmailHtmlShared(htmlSrc);
   } catch(err) {
     await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,''));
   }
@@ -2307,7 +2392,9 @@ async function loadAsWashReturn() {
     shipDate: o.ship_date ? o.ship_date.split("T")[0] : '',
     shipTo: o.ship_to || '',
     specialInstructions: o.po_notes || '',
-    customerEmail: (o.contacts||"").split("\n")[0].trim(),
+    customerEmail: parseCustomerContacts(o.contacts).email,
+    customerContactFmt: parseCustomerContacts(o.contacts).toFmt,
+    customerContactCc: parseCustomerContacts(o.contacts).cc,
     lines: [{ desc: o.desc||'', pn: o.pn||'', price: parseFloat(pp(o.buy))||0, sell: parseFloat(pp(o.sell))||0, qty: o.qty||'' }]
   }));
 
@@ -2325,7 +2412,8 @@ async function loadAsWashReturn() {
       bodyHtml: buildWRVendorEmailHtml(orders, vendor, mphPONum)
     },
     ...orders.map((o) => ({
-      to: o.customerEmail ? o.customerName + ' <' + o.customerEmail + '>' : '',
+      to: fmtCustomerTo(o.customerContactFmt, o.customerName),
+      cc: o.customerContactCc || '',
       subject: 'Order Confirmation — MPH United PO ' + mphPONum + ' | Customer PO ' + o.customerPO,
       body: '',
       bodyHtml: buildCustomerEmailHtml(
@@ -2403,7 +2491,8 @@ function renderWashReturnPO(orders, vendor, poNum) {
 
 function buildWRVendorEmailHtml(orders, vendor, poNum) {
   var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
-  h += '<p style="line-height:1.6;margin:0;">Hello,</p><br>';
+  var wrGreeting = getVendorGreeting(vendor);
+  h += '<p style="line-height:1.6;margin:0;">Hello' + (wrGreeting ? ' ' + wrGreeting + ',' : ',') + '</p><br>';
   h += '<p style="line-height:1.6;margin:0;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United for the <strong>Wash &amp; Return Program</strong>.</p>';
 
   orders.forEach(function(o, idx) {
