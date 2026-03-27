@@ -1140,7 +1140,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     r += '</tr>';
     return r;
   }).join('');
-  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var vGreeting = getVendorGreeting(v);
   h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (vGreeting ? ' ' + vGreeting + ',' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
@@ -1215,7 +1215,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     });
   });
   var poList = poNums.join(', ');
-  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var mpoGreeting = getVendorGreeting(vendor);
   h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (mpoGreeting ? ' ' + mpoGreeting + ',' : ',') + '</p><br>';
   var customerEntries = [];
@@ -1352,10 +1352,21 @@ function switchTab(idx, btn) {
 // which on Mac correctly writes the WebArchive format Outlook expects.
 // Also uses 12pt (not 12px) so Outlook's font-size picker shows "12".
 function copyEmailHtmlShared(htmlSrc) {
+  const isMac = /Mac|iPhone|iPod|iPad/i.test(navigator.platform || navigator.userAgent);
+  const htmlBlob = new Blob(['<html><body style="font-size:12pt;font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;">' + htmlSrc + '</body></html>'], { type: 'text/html' });
+  const plainBlob = new Blob([htmlSrc.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
+
+  // On Mac, execCommand('copy') does not reliably preserve HTML font styling when
+  // pasting into Outlook — go straight to the clipboard API with a proper HTML blob.
+  if (isMac) {
+    return navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
+  }
+
+  // Windows path: try execCommand first (preserves table formatting better in older Outlook)
   const el = document.createElement('div');
   el.setAttribute('contenteditable', 'true');
   el.style.cssText = 'position:fixed;top:-99999px;left:-99999px;width:800px;opacity:0.01;pointer-events:none;';
-  el.innerHTML = '<div style="font-size:12pt;font-family:\'Aptos\',Calibri,sans-serif;">' + htmlSrc + '</div>';
+  el.innerHTML = '<div style="font-size:12pt;font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;">' + htmlSrc + '</div>';
   document.body.appendChild(el);
   el.focus();
   const range = document.createRange();
@@ -1368,10 +1379,7 @@ function copyEmailHtmlShared(htmlSrc) {
   sel.removeAllRanges();
   document.body.removeChild(el);
   if (!ok) {
-    // Fallback: navigator.clipboard.write (Windows / non-Mac paths)
-    const blob = new Blob(['<html><body style="font-size:12pt;font-family:\'Aptos\',Calibri,sans-serif;">' + htmlSrc + '</body></html>'], { type: 'text/html' });
-    const plain = new Blob([htmlSrc.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
-    return navigator.clipboard.write([new ClipboardItem({ 'text/html': blob, 'text/plain': plain })]);
+    return navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': plainBlob })]);
   }
   return Promise.resolve();
 }
@@ -2490,7 +2498,7 @@ function renderWashReturnPO(orders, vendor, poNum) {
 }
 
 function buildWRVendorEmailHtml(orders, vendor, poNum) {
-  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,sans-serif;font-size:12px;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
+  var h = '<table width="600" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var wrGreeting = getVendorGreeting(vendor);
   h += '<p style="line-height:1.6;margin:0;">Hello' + (wrGreeting ? ' ' + wrGreeting + ',' : ',') + '</p><br>';
   h += '<p style="line-height:1.6;margin:0;">Please find below Purchase Order <strong>' + poNum + '</strong> from MPH United for the <strong>Wash &amp; Return Program</strong>.</p>';
