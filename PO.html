@@ -2198,9 +2198,10 @@ async function generateMultiplePOs(fromCheckbox = false) {
 
   const isMoveOrders = document.getElementById('isMoveOrders').checked;
   const isBlindMulti = document.getElementById('isBlindShipment').checked;
+  const isRevisedMulti = document.getElementById('isRevised').checked;
   const poNums = [];
   for (const ro of rawOrders) {
-    poNums.push((isMoveOrders && ro.mph_po) ? ro.mph_po : await genPONum());
+    poNums.push(((isRevisedMulti || isMoveOrders) && ro.mph_po) ? ro.mph_po : await genPONum());
   }
   lastMultiPOPoNums = poNums;
 
@@ -2219,7 +2220,7 @@ async function generateMultiplePOs(fromCheckbox = false) {
       apptTime: ro.appt || '',
       salesOrder: ro.alliance_so || '',
       specialInstructions: ro.po_notes || '',
-      isRevised: false,
+      isRevised: isRevisedMulti,
       isBlind: isBlindMulti,
       isCoastal,
       vendor,
@@ -2278,11 +2279,11 @@ async function generateMultiplePOs(fromCheckbox = false) {
     document.getElementById(`mpo-paper-${i}`).innerHTML = buildPOHtml(o, poNums[i]);
   });
 
-  multiPOEmailData = { to: vEmails.to, cc: vEmails.cc || '', subject: 'MPH United POs ' + poNums.join(', ') + ' | Multiple Orders', bodyHtml: combinedHtml, body: '' };
+  multiPOEmailData = { to: vEmails.to, cc: vEmails.cc || '', subject: (isRevisedMulti ? '[REVISED] ' : '') + 'MPH United POs ' + poNums.join(', ') + ' | Multiple Orders', bodyHtml: combinedHtml, body: '' };
   renderEmailDiv('mpo-emailDiv', multiPOEmailData);
 
   multiDoc.classList.add('active');
-  document.title = 'MPH Multiple POs ' + poNums.join(', ');
+  document.title = (isRevisedMulti ? 'Revised ' : '') + 'MPH Multiple POs ' + poNums.join(', ');
 }
 
 function switchMultiTab(idx, btn) {
