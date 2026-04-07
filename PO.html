@@ -299,7 +299,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>📋 How to Import Orders:</strong>&nbsp;&nbsp;
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
-    <strong>3)</strong> For split orders that need separate PO numbers, click all the orders (up to 4) and then click <em>Split Load &amp; Generate Multiple POs</em>.&nbsp;&nbsp;
+    <strong>3)</strong> For split loads that need multiple PO numbers on one PO, click all the orders (up to 4) and then click <em>Split Load/Multiple PO Numbers</em>.&nbsp;&nbsp;
     <strong>4)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
     <strong>5)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
     <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
@@ -340,7 +340,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select up to 4 rows for Split Loads</div>
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
-      <button class="btn-load-order" id="btnSplitMultiPO" onclick="loadSplitAndGenerateMultiple()" disabled style="background:#6a3a9e;color:#fff;display:none;">⚡📄 Split Load & Generate Multiple POs →</button>
+      <button class="btn-load-order" id="btnSplitMultiPO" onclick="loadSplitAndGenerateMultiple()" disabled style="background:#6a3a9e;color:#fff;display:none;">⚡# Split Load/Multiple PO Numbers →</button>
       <button class="btn-load-order" id="btnMultiPO" onclick="generateMultiplePOs()" disabled style="background:#1a3a6e;color:#fff;display:none;">📄 Generate Multiple POs →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
     </div>
@@ -708,6 +708,7 @@ let lastLoadedMphPO = '';
 let lastMultiPORawOrders = [];
 let lastMultiPOPoNums = [];
 let lastMultiPOMode = 'multi'; // 'multi' or 'splitMulti'
+let pendingPONum = null; // set before generatePO() to override the auto-generated PO number
 let selectedCustomer = null;
 let currentOrderIsCoastal = false;
 let dropdownTimer = null;
@@ -1030,7 +1031,8 @@ async function generatePO(silent = false) {
   const isRevised = document.getElementById('isRevised').checked;
   const revisedNum = document.getElementById('revisedPONum').value.trim();
   const isMoveOrders = document.getElementById('isMoveOrders').checked;
-  mphPONum = (isRevised && revisedNum) ? revisedNum : (isMoveOrders && lastLoadedMphPO) ? lastLoadedMphPO : await genPONum();
+  if (pendingPONum) { mphPONum = pendingPONum; pendingPONum = null; }
+  else mphPONum = (isRevised && revisedNum) ? revisedNum : (isMoveOrders && lastLoadedMphPO) ? lastLoadedMphPO : await genPONum();
 
   const order = {
     customerName,
@@ -1911,11 +1913,7 @@ function closeImport() {
 function onCheckboxChange() {
   const multiDoc = document.getElementById('multiPODocument');
   if (multiDoc && multiDoc.classList.contains('active') && lastMultiPORawOrders.length >= 2) {
-    if (lastMultiPOMode === 'splitMulti') {
-      loadSplitAndGenerateMultiple();
-    } else {
-      generateMultiplePOs(true);
-    }
+    generateMultiplePOs(true);
   } else {
     generatePO(true);
   }
@@ -2192,107 +2190,96 @@ async function loadSplitAndGenerateMultiple() {
   const selIdxs = importSelectedIdxs.slice(0, 4); // Capped at 4, same as Split Load
   if (selIdxs.length < 2) return;
   const rawOrders = selIdxs.map(i => importFiltered[i]);
-  const pp = s => parseFloat(parseNum(s)) || 0;
+  const pp = s => parseNum(s);
+  const o1 = rawOrders[0];
 
-  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
-  const vendor = VENDORS[vk] || { name: rawOrders[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
-
-  const isBlind = document.getElementById('isBlindShipment').checked;
-  const isRevised = document.getElementById('isRevised').checked;
-  const isMoveOrders = document.getElementById('isMoveOrders').checked;
-
-  lastMultiPORawOrders = rawOrders;
-  lastMultiPOMode = 'splitMulti';
-  setLoading(true, 'Building Split Load & Multiple POs...', 'Generating PO numbers');
+  // Show loading and close import panel
+  setLoading(true, 'Building Split Load / Multiple PO Numbers...', 'Generating PO numbers');
   closeImport();
 
   // Generate one PO number per selected order (up to 4)
+  const isRevised = document.getElementById('isRevised').checked;
+  const isMoveOrders = document.getElementById('isMoveOrders').checked;
   const poNums = [];
   for (const ro of rawOrders) {
     poNums.push(((isRevised || isMoveOrders) && ro.mph_po) ? ro.mph_po : await genPONum());
   }
-  lastMultiPOPoNums = poNums;
-
-  // Build orders — each PO is one order, but line description is labeled "SPLIT LOAD X"
-  const orders = rawOrders.map((ro, i) => {
-    const isCoastal = (ro.source === 'recycling' && ro.sheet === 'Coastal Container');
-    return {
-      customerName: ro.customer || '',
-      customerPO: ro.cust_po || 'N/A',
-      orderDate: fmtDate(new Date().toISOString().split('T')[0]),
-      shipTo: ro.ship_to || '--',
-      customerEmail: parseCustomerContacts(ro.contacts).email,
-      customerContactFmt: parseCustomerContacts(ro.contacts).toFmt,
-      customerContactCc: parseCustomerContacts(ro.contacts).cc,
-      shipDate: fmtDate(ro.ship_date),
-      shipVia: ro.freight || '',
-      apptTime: ro.appt || '',
-      salesOrder: ro.alliance_so || '',
-      specialInstructions: ro.po_notes || '',
-      isRevised,
-      isBlind,
-      isCoastal,
-      vendor,
-      lines: [{ desc: 'SPLIT LOAD ' + (i + 1) + ' — ' + (ro.desc || 'IBC Product'), pn: ro.pn || '', qty: pp(ro.qty) || 1, price: pp(ro.buy), sell: pp(ro.sell) }],
-      get total() { return this.lines.reduce((s, l) => s + l.qty * l.price, 0); }
-    };
-  });
 
   setLoading(false);
-  document.getElementById('emptyState').classList.add('hidden');
-  document.getElementById('poDocument').classList.remove('active');
 
-  const multiDoc = document.getElementById('multiPODocument');
+  // ── Populate the PO builder exactly like loadAsSplitLoad ──
+  document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("isMoveOrders").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  document.getElementById("revisedPONum").value = "";
 
-  let tabsHtml = orders.map((o, i) =>
-    `<button class="output-tab${i===0?' active':''}" onclick="switchMultiTab(${i},this)">📄 PO ${i+1}: ${escHtml(o.customerName)}</button>`
-  ).join('');
-  tabsHtml += `<button class="output-tab" onclick="switchMultiTab(${orders.length},this)">📧 Vendor Email</button>`;
+  // Customer / contact from first order
+  document.getElementById("customerSearch").value = o1.customer || "";
+  document.getElementById("selectedCustomerName").value = o1.customer || "";
+  const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o1.customer || "").toLowerCase());
+  if (cm) { selectCustomer(cm.name); }
+  else {
+    if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
+    if (o1.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o1.contacts).email;
+    document.getElementById("customerCard").classList.remove("active");
+  }
 
-  let panelsHtml = orders.map((o, i) =>
-    `<div class="output-panel${i===0?' active':''}" id="mpo-panel-${i}">
-      <div class="po-actions no-print">
-        <button class="btn-action primary" onclick="printMultiPO(${i}, '${poNums[i]}')">🖨 Save PO PDF</button>
-      </div>
-      <div class="po-paper" id="mpo-paper-${i}"></div>
-    </div>`
-  ).join('');
+  // Header fields — join all customer POs for multi-number split loads
+  const custPOs = rawOrders.map(o => o.cust_po).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
+  if (custPOs.length) document.getElementById("customerPO").value = custPOs.join(" / ");
+  lastLoadedMphPO = o1.mph_po || '';
+  if (o1.pn) document.getElementById("partNumber").value = o1.pn;
+  if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
+  if (o1.appt) document.getElementById("apptTime").value = o1.appt;
+  const _sd = parseToInputDate(o1.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
+  const _wd = parseToInputDate(o1.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
+  if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
-  const vEmails = parseVendorEmails(vendor.contact, vendor.email);
-  const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNums, vendor);
-  panelsHtml += `<div class="output-panel" id="mpo-panel-${orders.length}">
-    <div class="po-actions no-print">
-      <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
-      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
-    </div>
-    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the POs, save each PDF first, then attach them manually to the email.</div>
-    <div class="email-preview" id="mpo-emailDiv"></div>
-  </div>`;
+  // Notes: if all non-empty notes are identical show once, otherwise label by load
+  const allRawNotes = rawOrders.map(o => (o.po_notes || "").trim()).filter(Boolean);
+  const uniqueRawNotes = allRawNotes.filter((v, i, a) => a.indexOf(v) === i);
+  let splitNotesText;
+  if (uniqueRawNotes.length === 1) {
+    splitNotesText = uniqueRawNotes[0];
+  } else {
+    splitNotesText = rawOrders.map((o, idx) => {
+      const note = (o.po_notes || "").trim();
+      return note ? "Split Load " + (idx + 1) + ": " + note : null;
+    }).filter(Boolean).join("\n\n");
+  }
+  document.getElementById("specialInstructions").value = splitNotesText;
 
-  multiDoc.innerHTML = `
-    <div class="no-print" style="background:#f3eeff;border:1px solid #9e6ace;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#3a1a6e;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
-      <div style="flex:1;">
-        <strong>⚡📄 Split Load & Multiple POs — How to send:</strong><br>
-        <strong>1.</strong> Click <em>⬇ Download All as ZIP</em> to get all POs in one ZIP file, <em>or</em> click each PO tab and <em>Save PO PDF</em> individually.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#6a3a9e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#8a5abe'" onmouseout="this.style.background='#6a3a9e'">⬇ Download All as ZIP</button>
-        <button onclick="loadSplitAndGenerateMultiple()" style="background:#6a3a9e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#8a5abe'" onmouseout="this.style.background='#6a3a9e'">↻ Regenerate POs</button>
-      </div>
-    </div>
-    <div class="output-tabs">${tabsHtml}</div>
-    ${panelsHtml}`;
+  // Vendor from first order
+  const vk = matchVendorKey(o1.vendor, o1.sheet);
+  if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
-  orders.forEach((o, i) => {
-    document.getElementById(`mpo-paper-${i}`).innerHTML = buildPOHtml(o, poNums[i]);
+  // Freight from first order
+  if (o1.freight) {
+    const el = document.getElementById("shipVia");
+    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o1.freight.toLowerCase()) || o1.freight.toLowerCase().includes(op.value.toLowerCase()));
+    if (m) el.value = m.value;
+    else { const n = document.createElement("option"); n.value = o1.freight; n.textContent = o1.freight; el.appendChild(n); el.value = o1.freight; }
+  }
+
+  // One line item per selected order, labeled SPLIT LOAD N
+  const body = document.getElementById("lineBody");
+  body.innerHTML = "";
+  const ck = isCore(vk);
+  rawOrders.forEach((o, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = makeRowHTML("SPLIT LOAD " + (idx + 1) + " — " + (o.desc || ""), o.pn || "", pp(o.buy), ck);
+    body.appendChild(tr);
+    const qty = tr.querySelector(".li-qty");
+    const qtyVal = pp(o.qty); if (qty && qtyVal) qty.value = qtyVal;
+    const sell = tr.querySelector(".li-sell");
+    if (sell && o.sell) sell.value = pp(o.sell);
   });
 
-  multiPOEmailData = { to: vEmails.to, cc: vEmails.cc || '', subject: (isRevised ? '[REVISED] ' : '') + 'MPH United POs ' + poNums.join(', ') + ' | Split Load', bodyHtml: combinedHtml, body: '' };
-  renderEmailDiv('mpo-emailDiv', multiPOEmailData);
+  // Pre-load the joined PO numbers so generatePO() uses them instead of minting a new one
+  pendingPONum = poNums.join(" / ");
 
-  multiDoc.classList.add('active');
-  document.title = (isRevised ? 'Revised ' : '') + 'MPH Split Load POs ' + poNums.join(', ');
+  await generatePO();
 }
 
 async function generateMultiplePOs(fromCheckbox = false) {
