@@ -299,8 +299,9 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>📋 How to Import Orders:</strong>&nbsp;&nbsp;
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
-    <strong>3)</strong> For multiple POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
-    <strong>4)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
+    <strong>3)</strong> For split orders that need separate PO numbers, click all the orders (up to 4) and then click <em>Split Load &amp; Generate Multiple POs</em>.&nbsp;&nbsp;
+    <strong>4)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
+    <strong>5)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
     <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
   <div class="import-body">
@@ -339,6 +340,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <div class="import-footer-hint" id="importFooterHint">Select 1 row to load • Select up to 4 rows for Split Loads</div>
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
+      <button class="btn-load-order" id="btnSplitMultiPO" onclick="loadSplitAndGenerateMultiple()" disabled style="background:#6a3a9e;color:#fff;display:none;">⚡📄 Split Load & Generate Multiple POs →</button>
       <button class="btn-load-order" id="btnMultiPO" onclick="generateMultiplePOs()" disabled style="background:#1a3a6e;color:#fff;display:none;">📄 Generate Multiple POs →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
     </div>
@@ -705,6 +707,7 @@ let mphPONum = '';
 let lastLoadedMphPO = '';
 let lastMultiPORawOrders = [];
 let lastMultiPOPoNums = [];
+let lastMultiPOMode = 'multi'; // 'multi' or 'splitMulti'
 let selectedCustomer = null;
 let currentOrderIsCoastal = false;
 let dropdownTimer = null;
@@ -1908,7 +1911,11 @@ function closeImport() {
 function onCheckboxChange() {
   const multiDoc = document.getElementById('multiPODocument');
   if (multiDoc && multiDoc.classList.contains('active') && lastMultiPORawOrders.length >= 2) {
-    generateMultiplePOs(true);
+    if (lastMultiPOMode === 'splitMulti') {
+      loadSplitAndGenerateMultiple();
+    } else {
+      generateMultiplePOs(true);
+    }
   } else {
     generatePO(true);
   }
@@ -1928,6 +1935,8 @@ function filterImportTable() {
   document.getElementById("btnLoadOrder").disabled = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled = true;
+  document.getElementById("btnSplitMultiPO").style.display = "none";
+  document.getElementById("btnSplitMultiPO").disabled = true;
   document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
   renderImportTable();
 }
@@ -1996,12 +2005,14 @@ function selectImportRow(i) {
 function updateImportFooter() {
   const btnLoad = document.getElementById("btnLoadOrder");
   const btnSplit = document.getElementById("btnLoadSplit");
+  const btnSplitMulti = document.getElementById("btnSplitMultiPO");
   const btnMulti = document.getElementById("btnMultiPO");
   const hint = document.getElementById("importFooterHint");
   const count = importSelectedIdxs.length;
   if (count === 0) {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
+    btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select up to 20 for Multiple POs";
     return;
@@ -2011,18 +2022,21 @@ function updateImportFooter() {
   if (count === 1) {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
+    btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     const d = o1.desc||"";
     hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load or Multiple POs";
   } else if (count <= 4) {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
+    btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load or 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4 for Split Load, max 20 for Multiple POs)" : " • Split Load max reached — click more rows for Multiple POs only");
+    hint.textContent = "⚡ Split Load or ⚡📄 Split+Multi or 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4 for Split Load, max 20 for Multiple POs)" : " • Split Load max reached — click more rows for Multiple POs only");
   } else {
     // 5–20: Multiple POs only (Split Load capped at 4)
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
+    btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
     hint.textContent = "📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
   }
@@ -2174,6 +2188,113 @@ async function loadAsSplitLoad() {
   await generatePO();
 }
 
+async function loadSplitAndGenerateMultiple() {
+  const selIdxs = importSelectedIdxs.slice(0, 4); // Capped at 4, same as Split Load
+  if (selIdxs.length < 2) return;
+  const rawOrders = selIdxs.map(i => importFiltered[i]);
+  const pp = s => parseFloat(parseNum(s)) || 0;
+
+  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
+  const vendor = VENDORS[vk] || { name: rawOrders[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
+
+  const isBlind = document.getElementById('isBlindShipment').checked;
+  const isRevised = document.getElementById('isRevised').checked;
+  const isMoveOrders = document.getElementById('isMoveOrders').checked;
+
+  lastMultiPORawOrders = rawOrders;
+  lastMultiPOMode = 'splitMulti';
+  setLoading(true, 'Building Split Load & Multiple POs...', 'Generating PO numbers');
+  closeImport();
+
+  // Generate one PO number per selected order (up to 4)
+  const poNums = [];
+  for (const ro of rawOrders) {
+    poNums.push(((isRevised || isMoveOrders) && ro.mph_po) ? ro.mph_po : await genPONum());
+  }
+  lastMultiPOPoNums = poNums;
+
+  // Build orders — each PO is one order, but line description is labeled "SPLIT LOAD X"
+  const orders = rawOrders.map((ro, i) => {
+    const isCoastal = (ro.source === 'recycling' && ro.sheet === 'Coastal Container');
+    return {
+      customerName: ro.customer || '',
+      customerPO: ro.cust_po || 'N/A',
+      orderDate: fmtDate(new Date().toISOString().split('T')[0]),
+      shipTo: ro.ship_to || '--',
+      customerEmail: parseCustomerContacts(ro.contacts).email,
+      customerContactFmt: parseCustomerContacts(ro.contacts).toFmt,
+      customerContactCc: parseCustomerContacts(ro.contacts).cc,
+      shipDate: fmtDate(ro.ship_date),
+      shipVia: ro.freight || '',
+      apptTime: ro.appt || '',
+      salesOrder: ro.alliance_so || '',
+      specialInstructions: ro.po_notes || '',
+      isRevised,
+      isBlind,
+      isCoastal,
+      vendor,
+      lines: [{ desc: 'SPLIT LOAD ' + (i + 1) + ' — ' + (ro.desc || 'IBC Product'), pn: ro.pn || '', qty: pp(ro.qty) || 1, price: pp(ro.buy), sell: pp(ro.sell) }],
+      get total() { return this.lines.reduce((s, l) => s + l.qty * l.price, 0); }
+    };
+  });
+
+  setLoading(false);
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('poDocument').classList.remove('active');
+
+  const multiDoc = document.getElementById('multiPODocument');
+
+  let tabsHtml = orders.map((o, i) =>
+    `<button class="output-tab${i===0?' active':''}" onclick="switchMultiTab(${i},this)">📄 PO ${i+1}: ${escHtml(o.customerName)}</button>`
+  ).join('');
+  tabsHtml += `<button class="output-tab" onclick="switchMultiTab(${orders.length},this)">📧 Vendor Email</button>`;
+
+  let panelsHtml = orders.map((o, i) =>
+    `<div class="output-panel${i===0?' active':''}" id="mpo-panel-${i}">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="printMultiPO(${i}, '${poNums[i]}')">🖨 Save PO PDF</button>
+      </div>
+      <div class="po-paper" id="mpo-paper-${i}"></div>
+    </div>`
+  ).join('');
+
+  const vEmails = parseVendorEmails(vendor.contact, vendor.email);
+  const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNums, vendor);
+  panelsHtml += `<div class="output-panel" id="mpo-panel-${orders.length}">
+    <div class="po-actions no-print">
+      <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
+    </div>
+    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the POs, save each PDF first, then attach them manually to the email.</div>
+    <div class="email-preview" id="mpo-emailDiv"></div>
+  </div>`;
+
+  multiDoc.innerHTML = `
+    <div class="no-print" style="background:#f3eeff;border:1px solid #9e6ace;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#3a1a6e;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
+      <div style="flex:1;">
+        <strong>⚡📄 Split Load & Multiple POs — How to send:</strong><br>
+        <strong>1.</strong> Click <em>⬇ Download All as ZIP</em> to get all POs in one ZIP file, <em>or</em> click each PO tab and <em>Save PO PDF</em> individually.<br>
+        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#6a3a9e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#8a5abe'" onmouseout="this.style.background='#6a3a9e'">⬇ Download All as ZIP</button>
+        <button onclick="loadSplitAndGenerateMultiple()" style="background:#6a3a9e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#8a5abe'" onmouseout="this.style.background='#6a3a9e'">↻ Regenerate POs</button>
+      </div>
+    </div>
+    <div class="output-tabs">${tabsHtml}</div>
+    ${panelsHtml}`;
+
+  orders.forEach((o, i) => {
+    document.getElementById(`mpo-paper-${i}`).innerHTML = buildPOHtml(o, poNums[i]);
+  });
+
+  multiPOEmailData = { to: vEmails.to, cc: vEmails.cc || '', subject: (isRevised ? '[REVISED] ' : '') + 'MPH United POs ' + poNums.join(', ') + ' | Split Load', bodyHtml: combinedHtml, body: '' };
+  renderEmailDiv('mpo-emailDiv', multiPOEmailData);
+
+  multiDoc.classList.add('active');
+  document.title = (isRevised ? 'Revised ' : '') + 'MPH Split Load POs ' + poNums.join(', ');
+}
+
 async function generateMultiplePOs(fromCheckbox = false) {
   const selIdxs = importSelectedIdxs;
   if (selIdxs.length < 2) return;
@@ -2193,6 +2314,7 @@ async function generateMultiplePOs(fromCheckbox = false) {
   }
 
   lastMultiPORawOrders = rawOrders;
+  lastMultiPOMode = 'multi';
   setLoading(true, 'Building Multiple POs...', 'Generating PO numbers');
   closeImport();
 
