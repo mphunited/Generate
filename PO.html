@@ -1180,10 +1180,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
   h += '<br>';
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
-  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:4px 0;">' + escHtml(o.shipDate) + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
-  h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
-  if (!o.isBlind) h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO #</td><td style="padding:4px 0;">' + escHtml(o.customerPO) + '</td></tr>';
   h += '</table>';
   h += '<br>';
   if (!o.isBlind) {
