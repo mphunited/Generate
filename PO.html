@@ -266,6 +266,98 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 .import-empty .ie-icon { font-size:48px; margin-bottom:12px; }
 .import-empty h3 { font-family:'Aptos', 'Inter', sans-serif; font-weight:700; font-size:16px; margin-bottom:6px; color:var(--ink); }
 .import-empty p { font-size:12px; line-height:1.6; max-width:320px; margin:0 auto; }
+
+/* ── MOBILE TAB BAR ─────────────────────────────────────────────────── */
+.mobile-tabbar { display:none; position:fixed; bottom:0; left:0; right:0; height:56px; background:var(--ink); z-index:400; border-top:1px solid rgba(242,237,230,0.15); }
+.mobile-tabbar-inner { display:flex; height:100%; }
+.mobile-tab { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:none; background:transparent; color:rgba(242,237,230,0.5); cursor:pointer; font-family:'Aptos','Inter',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; transition:color 0.2s; padding:0; }
+.mobile-tab.active { color:var(--gold2); }
+.mobile-tab-icon { font-size:18px; line-height:1; }
+
+/* ── MOBILE RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Show tab bar */
+  .mobile-tabbar { display:block; }
+
+  /* Body padding for tab bar */
+  body { padding-bottom: 56px; }
+
+  /* Topbar */
+  .topbar { padding: 0 14px; height: 48px; }
+  .topbar-name { font-size: 12px; letter-spacing: 1px; }
+  .topbar-right { gap: 8px; font-size: 10px; }
+  .topbar-stat { display: none; }
+  .topbar-module { display: block; font-size: 10px; }
+
+  /* Layout: single column, panels toggled by JS */
+  .layout { display: block; min-height: calc(100vh - 48px - 56px); }
+
+  /* Sidebar: full width, hidden by default on mobile (shown by tab) */
+  .sidebar { width: 100%; padding: 16px 14px; border-right: none; min-height: calc(100vh - 48px - 56px); }
+  .sidebar.mobile-hidden { display: none; }
+
+  /* Main: full width */
+  .main { padding: 14px 12px; min-height: calc(100vh - 48px - 56px); }
+  .main.mobile-hidden { display: none; }
+
+  /* Info boxes: stack vertically */
+  .main > .no-print[style*="display:flex"] { flex-direction: column !important; }
+  .main > div[style*="display:flex"] { flex-direction: column !important; }
+
+  /* Field rows: stack on very narrow screens */
+  .field-row { grid-template-columns: 1fr; }
+
+  /* Products table: allow horizontal scroll */
+  .products-table { font-size: 11px; }
+  .products-table td input { font-size: 11px; }
+
+  /* PO paper */
+  .po-paper { padding: 20px 16px; max-width: 100%; }
+  .po-top { flex-direction: column; gap: 10px; }
+  .po-badge { text-align: left; }
+  .po-badge .po-title { font-size: 22px; }
+  .po-meta { grid-template-columns: 1fr; }
+  .po-meta-box:nth-child(2n) { border-right: none; border-left: none; }
+  .po-meta-box { border-right: none; }
+  .po-sig { grid-template-columns: 1fr; gap: 20px; }
+  .po-company h1 { font-size: 16px; letter-spacing: 1px; }
+
+  /* PO actions: wrap */
+  .po-actions { gap: 6px; }
+  .btn-action { padding: 7px 12px; font-size: 11px; }
+
+  /* Output tabs */
+  .output-tab { padding: 8px 12px; font-size: 11px; }
+
+  /* Email preview */
+  .email-preview-body { padding: 14px; font-size: 11px; }
+
+  /* Customer dropdown */
+  .customer-dropdown { max-height: 160px; }
+
+  /* Import panel */
+  .import-topbar { padding: 0 14px; height: 52px; }
+  .import-title { font-size: 12px; letter-spacing: 0.5px; }
+  .import-subtitle { display: none; }
+  .import-controls { padding: 10px 14px 8px; }
+  .import-upload-zone { padding: 10px 14px; }
+  .import-table td, .import-table thead th { padding: 7px 8px; font-size: 11px; }
+  .import-footer { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+  .btn-load-order { padding: 8px 14px; font-size: 12px; }
+
+  /* Modal */
+  .modal { padding: 20px 18px; width: 95vw; }
+
+  /* Generate button */
+  .btn-generate { font-size: 13px; padding: 13px; }
+}
+
+@media (max-width: 480px) {
+  .po-table thead th, .po-table tbody td, .po-table tfoot td { padding: 7px 8px; font-size: 11px; }
+  .po-table tfoot .total-val { font-size: 13px; }
+  .topbar-logo { width: 28px !important; height: 28px !important; }
+  .output-tab { padding: 7px 9px; font-size: 10px; }
+}
 </style>
 </head>
 <body>
@@ -2706,7 +2798,91 @@ function matchVendorKey(v, sheet) {
 // Init MSAL on page load
 setTimeout(initMsal, 300);
 
+// ── MOBILE DETECTION & TAB SWITCHING ────────────────────────────────────────
+(function() {
+  var currentMobileTab = 'form';
+
+  function isMobile() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+
+  window.switchMobileTab = function(tab) {
+    if (!isMobile()) return;
+    currentMobileTab = tab;
+    var sidebar = document.querySelector('.sidebar');
+    var main = document.querySelector('.main');
+    var tabForm = document.getElementById('mobileTabForm');
+    var tabPreview = document.getElementById('mobileTabPreview');
+    if (!sidebar || !main) return;
+
+    if (tab === 'form') {
+      sidebar.classList.remove('mobile-hidden');
+      main.classList.add('mobile-hidden');
+      tabForm.classList.add('active');
+      tabPreview.classList.remove('active');
+    } else {
+      sidebar.classList.add('mobile-hidden');
+      main.classList.remove('mobile-hidden');
+      tabForm.classList.remove('active');
+      tabPreview.classList.add('active');
+      // Scroll preview to top so user sees the PO
+      main.scrollTop = 0;
+    }
+  };
+
+  function applyMobileLayout() {
+    var sidebar = document.querySelector('.sidebar');
+    var main = document.querySelector('.main');
+    if (!sidebar || !main) return;
+
+    if (isMobile()) {
+      // Apply current tab state
+      switchMobileTab(currentMobileTab);
+    } else {
+      // Desktop: remove mobile classes
+      sidebar.classList.remove('mobile-hidden');
+      main.classList.remove('mobile-hidden');
+      document.getElementById('mobileTabForm').classList.add('active');
+      document.getElementById('mobileTabPreview').classList.remove('active');
+    }
+  }
+
+  // Switch to Preview tab automatically after PO is generated
+  var _origGeneratePO = window.generatePO;
+  if (typeof _origGeneratePO === 'function') {
+    window.generatePO = async function() {
+      var result = await _origGeneratePO.apply(this, arguments);
+      if (isMobile()) {
+        // Small delay so the PO renders before switching
+        setTimeout(function() { switchMobileTab('preview'); }, 400);
+      }
+      return result;
+    };
+  }
+
+  // Apply on load and resize
+  document.addEventListener('DOMContentLoaded', applyMobileLayout);
+  window.addEventListener('resize', applyMobileLayout);
+  // Also run immediately in case DOM is already loaded
+  if (document.readyState !== 'loading') applyMobileLayout();
+})();
+
 </script>
 <div id="toast"></div>
+
+<!-- ═══ MOBILE TAB BAR ═══ -->
+<div class="mobile-tabbar" id="mobileTabbar">
+  <div class="mobile-tabbar-inner">
+    <button class="mobile-tab active" id="mobileTabForm" onclick="switchMobileTab('form')">
+      <span class="mobile-tab-icon">📝</span>
+      <span>Form</span>
+    </button>
+    <button class="mobile-tab" id="mobileTabPreview" onclick="switchMobileTab('preview')">
+      <span class="mobile-tab-icon">📄</span>
+      <span>Preview</span>
+    </button>
+  </div>
+</div>
+
 </body>
 </html>
