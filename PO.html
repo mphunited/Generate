@@ -182,10 +182,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
 @media print {
   @page { margin: 0; }
-  .topbar, .sidebar, .po-actions, .output-tabs, .no-print { display: none !important; }
+  .topbar, .sidebar, .po-actions, .output-tabs, .no-print, .mobile-tabbar { display: none !important; }
   .layout { display: block; min-height: 0 !important; }
   .main { padding: 0; min-height: 0 !important; }
-  body { padding: 0.5in !important; min-height: 0 !important; }
+  body { padding: 0.5in !important; min-height: 0 !important; padding-bottom: 0.5in !important; }
   .po-paper { box-shadow: none; border: none; padding: 0; }
   .po-document { display: none !important; }
   .po-document.active { display: block !important; }
@@ -2190,8 +2190,7 @@ async function loadSelectedOrder() {
   const _sd = parseToInputDate(o.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
   const _wd = parseToInputDate(o.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
-  const notes = o.po_notes || "";
-  if (notes) document.getElementById("specialInstructions").value = notes;
+  document.getElementById("specialInstructions").value = o.po_notes || "";
   const vk = matchVendorKey(o.vendor, o.sheet);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
   if (o.freight) {
