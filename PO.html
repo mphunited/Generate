@@ -2848,6 +2848,12 @@ function matchVendorKey(v, sheet) {
   if (v.includes("eco green") || v.includes("ecogreen")) return "ecog_houston";
   if (v.includes("basco")) return "basco";
   if (v.includes("cpp") || v.includes("cpp-usa") || v.includes("cpp usa")) return "cpp_lakewales";
+  if (v.includes("container connectionz") || v.includes("connectionz")) return "containerconnectionz_wayzata";
+  if (v.includes("engy")) return "engy_houston";
+  if (v.includes("presley")) return "presley_sikeston";
+  if (v.includes("enterprise marking") || v.includes("emp(") || v.includes("emp ")) return "emp_fishers";
+  if (v.includes("tri-sure") || v.includes("trisure")) return "trisure";
+  if (v.includes("advatech")) return "advatech_houston";
   // Sheet-name fallbacks for when the vendor column is blank or uses a short name
   if (sheet) {
     const s = sheet.toLowerCase();
@@ -2855,6 +2861,12 @@ function matchVendorKey(v, sheet) {
     if (s.includes("eco green") || s.includes("ecogreen")) return "ecog_houston";
     if (s.includes("gjl")) return "gjl_sts";
     if (s.includes("cpp")) return "cpp_lakewales";
+    if (s.includes("connectionz")) return "containerconnectionz_wayzata";
+    if (s.includes("engy")) return "engy_houston";
+    if (s.includes("presley")) return "presley_sikeston";
+    if (s.includes("enterprise marking") || s.includes("emp")) return "emp_fishers";
+    if (s.includes("tri-sure") || s.includes("trisure")) return "trisure";
+    if (s.includes("advatech")) return "advatech_houston";
   }
   return "";
 }
