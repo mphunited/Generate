@@ -709,6 +709,7 @@ let lastMultiPORawOrders = [];
 let lastMultiPOPoNums = [];
 let lastMultiPOMode = 'multi'; // 'multi' or 'splitMulti'
 let pendingPONum = null; // set before generatePO() to override the auto-generated PO number
+let splitLineOverrides = null; // [{poNum, custPO}] per line for Split Load/Multiple PO Numbers; cleared after use
 let selectedCustomer = null;
 let currentOrderIsCoastal = false;
 let dropdownTimer = null;
@@ -1130,13 +1131,17 @@ function renderPO(o) {
 }
 
 function buildVendorEmailHtml(o, v, ls, poNum) {
-  var rows = ls.map(function(l) {
+  var lineOverrides = splitLineOverrides;
+  splitLineOverrides = null; // consume immediately so it doesn't bleed into other calls
+  var rows = ls.map(function(l, li) {
     var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
     var qty = parseFloat(l.qty) || 0;
     var total = qty * (parseFloat(l.price) || 0);
+    var linePoNum = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].poNum : (poNum || '');
+    var lineCustPO = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].custPO : (o.customerPO || '');
     var r = '<tr>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
-    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(linePoNum) + '</td>';
+    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(lineCustPO) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
@@ -2278,6 +2283,12 @@ async function loadSplitAndGenerateMultiple() {
 
   // Pre-load the joined PO numbers so generatePO() uses them instead of minting a new one
   pendingPONum = poNums.join(" / ");
+
+  // Per-line overrides so the vendor email shows individual PO / Customer PO per row
+  splitLineOverrides = rawOrders.map((ro, i) => ({
+    poNum: poNums[i],
+    custPO: ro.cust_po || 'N/A'
+  }));
 
   await generatePO();
 }
