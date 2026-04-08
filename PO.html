@@ -920,8 +920,8 @@ function parseCityState(addr) {
   if (!addr) return '';
   var lines = addr.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l; });
   for (var i = lines.length - 1; i >= 0; i--) {
-    var m = lines[i].match(/^(.+),\s*([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
-    if (m) return m[1].trim() + ', ' + m[2];
+    var m = lines[i].match(/^(.+),\s*([A-Za-z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+    if (m) return m[1].trim() + ', ' + m[2].toUpperCase();
   }
   return '';
 }
@@ -1356,6 +1356,28 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
   h += '</table>';
+  // Ship To block — one entry per unique destination, matching single-PO vendor email behaviour
+  var shipToEntries = [];
+  var seenShipToKeys = {};
+  orders.forEach(function(o, oi) {
+    if (!o.isBlind && o.shipTo && o.shipTo !== '--') {
+      var key = (o.customerName + '|' + o.shipTo).toLowerCase();
+      if (!seenShipToKeys[key]) {
+        seenShipToKeys[key] = true;
+        shipToEntries.push({ customerName: o.customerName, shipTo: o.shipTo, isCoastal: o.isCoastal, poNum: poNums[oi] });
+      }
+    }
+  });
+  if (shipToEntries.length > 0) {
+    h += '<br>';
+    shipToEntries.forEach(function(entry) {
+      if (entry.isCoastal) {
+        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12px;"><strong>Ship From:</strong><br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
+      } else {
+        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12px;"><strong>Ship To:</strong><br>' + escHtml(entry.customerName) + '<br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
+      }
+    });
+  }
   var notesOrders = orders.filter(function(o) { return o.specialInstructions && o.specialInstructions.trim(); });
   if (notesOrders.length > 0) {
     h += '<br>';
