@@ -186,9 +186,18 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   .layout { display: block; min-height: 0 !important; }
   .main { padding: 0; min-height: 0 !important; }
   body { padding: 0.5in !important; min-height: 0 !important; padding-bottom: 0.5in !important; }
-  .po-paper { box-shadow: none; border: none; padding: 0; }
+  .po-paper { box-shadow: none; border: none; padding: 0; max-width: 100% !important; }
   .po-document { display: none !important; }
   .po-document.active { display: block !important; }
+  /* Force desktop PO layout regardless of mobile viewport */
+  .po-top { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-start !important; gap: 0 !important; }
+  .po-badge { text-align: right !important; }
+  .po-badge .po-title { font-size: 28px !important; }
+  .po-company h1 { font-size: 22px !important; letter-spacing: 2px !important; }
+  .po-meta { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+  .po-meta-box { border-right: 1px solid rgba(26,22,18,0.12) !important; }
+  .po-meta-box:nth-child(2n) { border-right: none !important; }
+  .po-sig { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 40px !important; }
 }
 
 /* MODALS */
@@ -1091,12 +1100,30 @@ async function genPONum() {
   localStorage.setItem('mph_po_counter', String(next));
   return `${prefix}MPH${next}`;
 }
-function printPO() {
-  const orig = document.title;
-  const isRev = document.getElementById('isRevised').checked;
-  
-  window.print();
-  setTimeout(() => { document.title = orig; }, 1000);
+async function printPO() {
+  const paper = document.getElementById('poPaper');
+  if (!paper) return;
+  const btn = document.querySelector('#outPanel0 .btn-action.primary');
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
+  showToast('Building PDF — please wait…', 8000);
+  try {
+    await html2pdf()
+      .set({
+        margin: [0.45, 0.45, 0.45, 0.45],
+        filename: 'MPH PO ' + (mphPONum || 'Document') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      })
+      .from(paper)
+      .save();
+    showToast('✅ PDF saved!', 3000);
+  } catch(e) {
+    console.error('printPO error:', e);
+    showToast('Error saving PDF. Try again.', 4000);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
 function setLoading(on, msg, sub) {
   document.getElementById('loadingState').classList.toggle('active', on);
@@ -2524,14 +2551,30 @@ function switchMultiTab(idx, btn) {
   if (panel) panel.classList.add('active');
 }
 
-function printMultiPO(idx, poNum) {
-  const panels = document.querySelectorAll('#multiPODocument .output-panel');
-  panels.forEach((p, i) => { p.style.display = (i === idx) ? 'block' : 'none'; });
-  const orig = document.title;
-  if (poNum) document.title = 'MPH PO ' + poNum;
-  window.print();
-  panels.forEach(p => { p.style.display = ''; });
-  setTimeout(() => { document.title = orig; }, 1000);
+async function printMultiPO(idx, poNum) {
+  const paper = document.getElementById('mpo-paper-' + idx);
+  if (!paper) return;
+  const btn = document.querySelector(`#mpo-panel-${idx} .btn-action.primary`);
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
+  showToast('Building PDF — please wait…', 8000);
+  try {
+    await html2pdf()
+      .set({
+        margin: [0.45, 0.45, 0.45, 0.45],
+        filename: 'MPH PO ' + (poNum || ('Document-' + idx)) + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      })
+      .from(paper)
+      .save();
+    showToast('✅ PDF saved!', 3000);
+  } catch(e) {
+    console.error('printMultiPO error:', e);
+    showToast('Error saving PDF. Try again.', 4000);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
 
 async function downloadAllMultiPOs() {
