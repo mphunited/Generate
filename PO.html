@@ -987,15 +987,35 @@ function getLines() {
   return Array.from(document.querySelectorAll('#lineBody tr')).map(r => ({
     desc: r.querySelector('.li-desc').value || 'IBC Product',
     pn: r.querySelector('.li-pn') ? r.querySelector('.li-pn').value.trim() : '',
-    qty: parseFloat(r.querySelector('.li-qty').value) || 0,
+    qty: parseQty(r.querySelector('.li-qty').value),
     price: parseFloat(r.querySelector('.li-price').value) || 0,
     sell: parseFloat(r.querySelector('.li-sell') ? r.querySelector('.li-sell').value : 0) || 0
   })).filter(r => r.desc);
 }
 
 // -- HELPERS ---------------------------------------------------------------
-function fmtCur(n) { return n > 0 ? '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') : '--'; }
+function fmtCur(n) {
+  if (n <= 0) return '--';
+  // Use minimum 2 decimal places, but increase precision to avoid display rounding
+  let d = 2;
+  while (d <= 6 && Math.abs(parseFloat(n.toFixed(d)) - n) > 1e-9) d++;
+  let s = n.toFixed(d);
+  // Trim trailing zeros beyond 2 decimal places
+  if (d > 2) s = s.replace(/(\.\d\d.*?)0+$/, '$1');
+  return '$' + s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
 function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
+// Parse a quantity that may contain comma separators (e.g. "10,000" → 10000)
+function parseQty(q) {
+  if (q === null || q === undefined || q === '') return 0;
+  return parseFloat(String(q).replace(/,/g, '')) || 0;
+}
+// Display a quantity with comma formatting (e.g. 10000 → "10,000")
+function fmtQty(q) {
+  if (q === null || q === undefined || q === '') return '--';
+  const n = parseQty(q);
+  return n > 0 ? n.toLocaleString() : (String(q) || '--');
+}
 // Normalize any date string from Excel to yyyy-mm-dd for <input type="date">
 function parseToInputDate(s) {
   if (!s) return '';
@@ -1013,7 +1033,7 @@ function parseToInputDate(s) {
 // Extract the first number from a mixed string, ignoring any surrounding text.
 function parseNum(s) {
   if (!s) return '';
-  const m = s.match(/[\d.]+/);
+  const m = String(s).replace(/,/g, '').match(/[\d.]+/);
   return m ? m[0] : '';
 }
 // Parse a semicolon-delimited email string → { to: "Name <first>", toRaw: "first@...", cc: "second@...; third@..." }
@@ -1181,8 +1201,8 @@ async function generatePO(silent = false) {
     document.getElementById('generateBtn').disabled = true;
     setTimeout(() => {
       const descList = lines.map(l => (l.desc||'').replace(/\n/g,' | ') + (l.pn ? ` [P/N: ${l.pn}]` : '')).join('\n');
-      const qtyPriceList = lines.map(l => `Qty: ${l.qty||'--'}   Buy Price: ${fmtCur(l.price)}`).join('\n');
-      const qtyPriceListSell = lines.map(l => `Qty: ${l.qty||'--'}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
+      const qtyPriceList = lines.map(l => `Qty: ${fmtQty(l.qty)}   Buy Price: ${fmtCur(l.price)}`).join('\n');
+      const qtyPriceListSell = lines.map(l => `Qty: ${fmtQty(l.qty)}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
       const vEmails = parseVendorEmails(vendor.contact, vendor.email);
       generatedEmails = [{
         to: vEmails.to,
@@ -1215,7 +1235,7 @@ function buildPOHtml(o, poNum) {
   const hasPN = o.lines.some(l => l.pn);
   const linesHtml = o.lines.map(l => {
     const descHtml = escHtml(l.desc).replace(/\n/g,'<br>');
-    return `<tr><td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td><td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(l.qty*l.price):'--'}</td></tr>`;
+    return `<tr><td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td><td>${fmtQty(l.qty)}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(parseQty(l.qty)*l.price):'--'}</td></tr>`;
   }).join('');
   return `
     <div class="po-top">
@@ -1254,7 +1274,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   splitLineOverrides = null; // consume immediately so it doesn't bleed into other calls
   var rows = ls.map(function(l, li) {
     var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
-    var qty = parseFloat(l.qty) || 0;
+    var qty = parseQty(l.qty);
     var total = qty * (parseFloat(l.price) || 0);
     var linePoNum = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].poNum : (poNum || '');
     var lineCustPO = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].custPO : (o.customerPO || '');
@@ -1265,7 +1285,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
@@ -1326,7 +1346,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     var poNum = poNums[oi];
     o.lines.forEach(function(l) {
       var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
-      var qty = parseFloat(l.qty) || 0;
+      var qty = parseQty(l.qty);
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
@@ -1335,7 +1355,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
@@ -1433,7 +1453,7 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:100px;">' + fmtCur(sp) + '</td>';
     r += '</tr>';
     return r;
@@ -2728,10 +2748,10 @@ function renderWashReturnPO(orders, vendor, poNum) {
   const sectionsHtml = orders.map((o, idx) => {
     const linesHtml = o.lines.map(l => {
       const descHtml = escHtml(l.desc||'').replace(/\n/g,'<br>');
-      const total = (l.qty && l.price) ? fmtCur(parseFloat(l.qty) * parseFloat(l.price)) : '--';
+      const total = (l.qty && l.price) ? fmtCur(parseQty(l.qty) * parseFloat(l.price)) : '--';
       return `<tr>
         <td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td>
-        <td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${total}</td>
+        <td>${fmtQty(l.qty)}</td><td>${fmtCur(l.price)}</td><td>${total}</td>
       </tr>`;
     }).join('');
     return `<div class="wr-order-section">
@@ -2782,13 +2802,13 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
   orders.forEach(function(o, idx) {
     var rows = o.lines.map(function(l) {
       var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
-      var qty = parseFloat(l.qty) || 0;
+      var qty = parseQty(l.qty);
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
