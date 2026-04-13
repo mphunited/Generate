@@ -559,7 +559,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="coastal_alvin">Coastal Container Services — Alvin, TX</option>
           </optgroup>
           <optgroup label="📦 Other Vendors / Suppliers">
-            <option value="gjl_sts">GJL / STS</option>
+            <option value="gjl">GJL</option>
             <option value="engy_houston">ENGY Container Products — Houston, TX</option>
             <option value="presley_sikeston">Presley Enterprises — Sikeston, MO</option>
             <option value="emp_fishers">EMP Enterprise Marking Product — Fishers, IN</option>
@@ -751,7 +751,7 @@ const VENDORS = {
   centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum recycling only.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
-  gjl_sts:{name:"GJL / STS",address:"",contact:"Tony Suen",phone:"",email:"tsuc.ibc@gmail.com; michael@ac-ibc.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
+  gjl:{name:"GJL",address:"",contact:"Tony Suen",phone:"",email:"tsuc.ibc@gmail.com; michael@ac-ibc.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   engy_houston:{name:"ENGY Container Products",address:"2425 Mowery Rd\nHouston, TX 77045",contact:"",phone:"",email:"customerservice@engycontainers.com; pmckelvy@engycontainers.com; gcervantes@engygrp.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   presley_sikeston:{name:"Presley Enterprises",address:"1101 School St\nSikeston, MO 63801",contact:"Kevin Presley",phone:"",email:"kevin@presleyent.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   emp_fishers:{name:"EMP (Enterprise Marking Product)",address:"12840 Ford Drive\nFishers, IN 46038",contact:"Libby Bright",phone:"",email:"libbyb@emp4labels.com; MikeL@emp4labels.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"Labels / Marking Products",price:""}]},
@@ -787,7 +787,7 @@ const VENDOR_GREETINGS = {
   "MPH United / Centurion -- Lewisburg, TN":                  "Clint",
   "MPH United / Centurion -- Memphis, TN":                    "Clint",
   "MPH United / Coastal Container Services -- Alvin, TX":     "Coastal Container",
-  "GJL / STS":                                                "Tony",
+  "GJL":                                                "Tony",
   "ENGY Container Products":                                  "ENGY",
   "Presley Enterprises":                                      "Presley",
   "EMP (Enterprise Marking Product)":                         "EMP",
@@ -2834,7 +2834,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("5 star") || v.includes("five star")) return "fivestar_bristow";
   if (v.includes("southeast") || v.includes("sec ")) return "sec_cleveland";
   if (v.includes("great plains") && v.includes("garden city")) return "gpc_gardencity";
-  if (v.includes("gjl")) return "gjl_sts";
+  if (v.includes("gjl")) return "gjl";
   if (v.includes("superior tote") && v.includes("greenwood")) return "sts_greenwood";
   if (v.includes("superior tote") && v.includes("summitville")) return "sts_summitville";
   if (v.includes("united container")) return "ucg_hillsboro";
@@ -2859,7 +2859,7 @@ function matchVendorKey(v, sheet) {
     const s = sheet.toLowerCase();
     if (s.includes("basco")) return "basco";
     if (s.includes("eco green") || s.includes("ecogreen")) return "ecog_houston";
-    if (s.includes("gjl")) return "gjl_sts";
+    if (s.includes("gjl")) return "gjl";
     if (s.includes("cpp")) return "cpp_lakewales";
     if (s.includes("connectionz")) return "containerconnectionz_wayzata";
     if (s.includes("engy")) return "engy_houston";
