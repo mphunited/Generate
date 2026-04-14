@@ -345,6 +345,11 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   .customer-dropdown { max-height: 160px; }
 
   /* Import panel */
+  .import-instructions { display: none; }
+  /* Main screen instruction boxes — !important overrides the inline display:flex */
+  .main-screen-instructions { display: none !important; }
+  /* Multi-PO instruction hint text — button is kept but description text is hidden */
+  .po-send-hint { display: none !important; }
   .import-topbar { padding: 0 14px; height: 52px; }
   .import-title { font-size: 12px; letter-spacing: 0.5px; }
   .import-subtitle { display: none; }
@@ -396,14 +401,15 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     </div>
     <button class="btn-close-import" onclick="closeImport()">✕ Close</button>
   </div>
-  <div style="background:#eaf4ee;border-bottom:1px solid #7abf95;padding:10px 28px;font-size:12.5px;color:#1a4a2e;line-height:1.75;">
+  <div class="import-instructions" style="background:#eaf4ee;border-bottom:1px solid #7abf95;padding:10px 28px;font-size:12.5px;color:#1a4a2e;line-height:1.75;">
     <strong>📋 How to Import Orders:</strong>&nbsp;&nbsp;
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
     <strong>3)</strong> For split loads that need multiple PO numbers on one PO, click all the orders (up to 4) and then click <em>Split Load/Multiple PO Numbers</em>.&nbsp;&nbsp;
-    <strong>4)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
-    <strong>5)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
-    <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
+    <strong>4)</strong> For split loads plus a separate regular load, select the split loads and the regular load, then click <em>Load Split &amp; Regular Load</em> — generates two POs and one combined vendor email.&nbsp;&nbsp;
+    <strong>5)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
+    <strong>6)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
+    <strong>7)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
   <div class="import-body">
     <div class="import-controls">
@@ -442,6 +448,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
       <button class="btn-load-order" id="btnSplitMultiPO" onclick="loadSplitAndGenerateMultiple()" disabled style="background:#6a3a9e;color:#fff;display:none;">⚡# Split Load/Multiple PO Numbers →</button>
+      <button class="btn-load-order" id="btnSplitRegular" onclick="loadSplitAndRegular()" disabled style="background:#c05c00;color:#fff;display:none;">⚡+ Load Split &amp; Regular Load →</button>
       <button class="btn-load-order" id="btnMultiPO" onclick="generateMultiplePOs()" disabled style="background:#1a3a6e;color:#fff;display:none;">📄 Generate Multiple POs →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
     </div>
@@ -559,7 +566,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="coastal_alvin">Coastal Container Services — Alvin, TX</option>
           </optgroup>
           <optgroup label="📦 Other Vendors / Suppliers">
-            <option value="gjl">GJL</option>
+            <option value="gjl_sts">GJL</option>
             <option value="engy_houston">ENGY Container Products — Houston, TX</option>
             <option value="presley_sikeston">Presley Enterprises — Sikeston, MO</option>
             <option value="emp_fishers">EMP Enterprise Marking Product — Fishers, IN</option>
@@ -663,7 +670,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
   <!-- ═══ MAIN OUTPUT ═══ -->
   <div class="main">
-    <div class="no-print" style="display:flex;gap:10px;margin-bottom:14px;align-items:stretch;">
+    <div class="no-print main-screen-instructions" style="display:flex;gap:10px;margin-bottom:14px;align-items:stretch;">
       <div style="flex:1;background:#eaf4ee;border:1px solid #7abf95;border-radius:8px;padding:12px 16px;font-size:13px;color:#1a4a2e;line-height:1.7;">
         <strong>📂 How to Import PO Requests:</strong><br>
         <strong>1.</strong> Click <em>Import PO Requests from Excel</em>.<br>
@@ -672,9 +679,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div style="flex:1;background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;font-size:13px;color:#5a4a00;line-height:1.7;">
         <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
-        <strong>1.</strong> Click <em>Save PO PDF</em> and save the PO to a folder on your computer.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then click <em>Copy HTML Body</em> to copy the email content.<br>
-        <strong>3.</strong> Click <em>Open Email</em>, paste into the body of the email, then attach the saved PDF.
+        <strong>1.</strong> Generate the PO(s), then click the <em>Send POs to Outlook in Browser</em> button below — a draft opens in Outlook with the PO PDF(s) auto-attached.
       </div>
     </div>
     <div class="empty-state" id="emptyState">
@@ -698,13 +703,14 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="output-panel active" id="outPanel0">
         <div class="po-actions">
           <button class="btn-action primary" onclick="printPO()">🖨 Save PO PDF</button>
+          <button class="btn-action primary" onclick="openInOutlook(0)">✉ Send POs to Outlook in Browser</button>
           <button class="btn-action" onclick="generatePO()">↺ Regenerate</button>
         </div>
         <div class="po-paper" id="poPaper"></div>
       </div>
       <div class="output-panel" id="outPanel1">
         <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(0)">✉ Open Email (then paste body)</button></div>
-        <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the PO, save the PDF first, then attach it manually to the email.</div>
+        <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Click <em>Open Email</em> to create a draft with the PO PDF automatically attached.</div>
         <div class="email-preview" id="emailDiv0"></div>
       </div>
       <div class="output-panel" id="outPanel2">
@@ -751,7 +757,7 @@ const VENDORS = {
   centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum recycling only.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
-  gjl:{name:"GJL",address:"",contact:"Tony Suen",phone:"",email:"tsuc.ibc@gmail.com; michael@ac-ibc.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
+  gjl_sts:{name:"GJL",address:"",contact:"Tony Suen",phone:"",email:"tsuc.ibc@gmail.com; michael@ac-ibc.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   engy_houston:{name:"ENGY Container Products",address:"2425 Mowery Rd\nHouston, TX 77045",contact:"",phone:"",email:"customerservice@engycontainers.com; pmckelvy@engycontainers.com; gcervantes@engygrp.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   presley_sikeston:{name:"Presley Enterprises",address:"1101 School St\nSikeston, MO 63801",contact:"Kevin Presley",phone:"",email:"kevin@presleyent.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   emp_fishers:{name:"EMP (Enterprise Marking Product)",address:"12840 Ford Drive\nFishers, IN 46038",contact:"Libby Bright",phone:"",email:"libbyb@emp4labels.com; MikeL@emp4labels.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"Labels / Marking Products",price:""}]},
@@ -787,7 +793,7 @@ const VENDOR_GREETINGS = {
   "MPH United / Centurion -- Lewisburg, TN":                  "Clint",
   "MPH United / Centurion -- Memphis, TN":                    "Clint",
   "MPH United / Coastal Container Services -- Alvin, TX":     "Coastal Container",
-  "GJL":                                                "Tony",
+  "GJL":                                                      "Tony",
   "ENGY Container Products":                                  "ENGY",
   "Presley Enterprises":                                      "Presley",
   "EMP (Enterprise Marking Product)":                         "EMP",
@@ -1004,7 +1010,6 @@ function fmtCur(n) {
   if (d > 2) s = s.replace(/(\.\d\d.*?)0+$/, '$1');
   return '$' + s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
-function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
 // Parse a quantity that may contain comma separators (e.g. "10,000" → 10000)
 function parseQty(q) {
   if (q === null || q === undefined || q === '') return 0;
@@ -1016,6 +1021,7 @@ function fmtQty(q) {
   const n = parseQty(q);
   return n > 0 ? n.toLocaleString() : (String(q) || '--');
 }
+function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
 // Normalize any date string from Excel to yyyy-mm-dd for <input type="date">
 function parseToInputDate(s) {
   if (!s) return '';
@@ -1128,16 +1134,15 @@ async function printPO() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
   try {
-    await html2pdf()
-      .set({
+    await withPaperAtTop(paper, () =>
+      html2pdf().set({
         margin: [0.45, 0.45, 0.45, 0.45],
         filename: 'MPH PO ' + (mphPONum || 'Document') + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      })
-      .from(paper)
-      .save();
+      }).from(paper).save()
+    );
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printPO error:', e);
@@ -1279,21 +1284,21 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     var linePoNum = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].poNum : (poNum || '');
     var lineCustPO = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].custPO : (o.customerPO || '');
     var r = '<tr>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(linePoNum) + '</td>';
-    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(lineCustPO) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(linePoNum) + '</td>';
+    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(lineCustPO) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
     return r;
   }).join('');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var vGreeting = getVendorGreeting(v);
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (vGreeting ? ' ' + vGreeting + ',' : ',') + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">Hello' + (vGreeting ? ' ' + vGreeting + ',' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
   var vendorCS = parseCityState(v.address||'');
@@ -1304,7 +1309,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     if (customerCS) introLine += ' - ' + escHtml(customerCS);
   }
   introLine += '.';
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + introLine + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">' + introLine + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
@@ -1316,24 +1321,24 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-  if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
+  if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
   h += '<br>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   h += '</table>';
   h += '<br>';
   if (!o.isBlind) {
     if (o.isCoastal) {
-      h += '<p style="line-height:1.6;margin:0;font-size:12px;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+      h += '<p style="line-height:1.6;margin:0;font-size:12pt;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
     } else {
-      h += '<p style="line-height:1.6;margin:0;font-size:12px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+      h += '<p style="line-height:1.6;margin:0;font-size:12pt;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
     }
   }
-  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
-  h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12pt;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   if (o.isCoastal) {
-    h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">BOL is attached to this email.</p>';
-    h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">The carrier will contact you to arrange freight.</p>';
+    h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">BOL is attached to this email.</p>';
+    h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">The carrier will contact you to arrange freight.</p>';
   }
   h += '</td></tr></table>';
   return h;
@@ -1349,15 +1354,15 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       var qty = parseQty(l.qty);
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
-      if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
+      if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
       allRows += r;
     });
@@ -1365,7 +1370,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   var poList = poNums.join(', ');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var mpoGreeting = getVendorGreeting(vendor);
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (mpoGreeting ? ' ' + mpoGreeting + ',' : ',') + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">Hello' + (mpoGreeting ? ' ' + mpoGreeting + ',' : ',') + '</p><br>';
   var customerEntries = [];
   var seenCustomers = {};
   orders.forEach(function(o) {
@@ -1384,7 +1389,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     }).join(', ') + '</strong>';
   }
   multiIntro += '.';
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + multiIntro + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">' + multiIntro + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
@@ -1398,9 +1403,9 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + allRows + '</tbody></table>';
   var multiSOs = orders.map(function(o){ return o.salesOrder||''; }).filter(function(v){ return v; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
-  if (multiSOs.length > 0) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(multiSOs.join(', ')) + '</p>';
+  if (multiSOs.length > 0) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(multiSOs.join(', ')) + '</p>';
   h += '<br>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
   h += '</table>';
   // Ship To block — one entry per unique destination, matching single-PO vendor email behaviour
@@ -1419,9 +1424,9 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     h += '<br>';
     shipToEntries.forEach(function(entry) {
       if (entry.isCoastal) {
-        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12px;"><strong>Ship From:</strong><br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
+        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12pt;"><strong>Ship From:</strong><br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
       } else {
-        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12px;"><strong>Ship To:</strong><br>' + escHtml(entry.customerName) + '<br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
+        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12pt;"><strong>Ship To:</strong><br>' + escHtml(entry.customerName) + '<br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
       }
     });
   }
@@ -1432,16 +1437,16 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       .filter(function(v, i, a) { return a.indexOf(v) === i; });
     if (uniqueEmailNotes.length === 1) {
       // All orders share the same note — show it once without PO labels
-      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(uniqueEmailNotes[0]).replace(/\n/g,'<br>') + '</div>';
+      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12pt;"><strong>PO Notes:</strong><br>' + escHtml(uniqueEmailNotes[0]).replace(/\n/g,'<br>') + '</div>';
     } else {
       notesOrders.forEach(function(o, i) {
         var poNum = poNums[orders.indexOf(o)];
         var label = notesOrders.length > 1 ? 'PO Notes (' + escHtml(poNum||'') + ')' : 'PO Notes';
-        h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12px;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+        h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12pt;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
       });
     }
   }
-  h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -1572,28 +1577,113 @@ function copyEmail(idx, btnId) {
 
 async function openInOutlook(idx) {
   const e = generatedEmails[idx];
-  // Extract all bare email addresses from To field
+  // Extract all bare email addresses from To / CC fields
   const toMatches = (e.to || '').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
   const toAddr = toMatches.join(';');
-  // Extract all bare email addresses from CC field
   const ccMatches = (e.cc || '').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
   const ccAddr = ccMatches.join(';');
-
-  // Copy the HTML body to clipboard FIRST (await so it completes before mailto fires)
   const htmlSrc = e.bodyHtml || e.body || '';
+
+  // ── Try Graph API draft (auto-populates full HTML body + attaches PDF) ───
+  try {
+    const mailToken = await getMailToken();
+    if (mailToken) {
+      const draft = await createMailDraft(mailToken, toAddr, ccAddr, e.subject, htmlSrc);
+      if (draft && draft.id && draft.webLink) {
+        // Generate the PO PDF as a blob and attach it to the draft
+        const paper = document.getElementById('poPaper');
+        if (paper) {
+          try {
+            showToast('⏳ Generating PDF attachment…', 8000);
+            const pdfBlob = await withPaperAtTop(paper, () =>
+              html2pdf().set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                .from(paper).output('blob')
+            );
+            const b64 = await blobToBase64(pdfBlob);
+            await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (mphPONum||'') + '.pdf', b64);
+          } catch(pdfErr) { console.warn('PDF attach failed:', pdfErr); }
+        }
+        // On mobile, webLink triggers a native-app handoff that blanks the screen.
+        // Open the Drafts folder instead — the new draft is always at the top.
+        const openUrl = isMobileDevice()
+          ? 'https://outlook.office.com/mail/drafts'
+          : draft.webLink;
+        window.open(openUrl, '_blank');
+        showToast(isMobileDevice()
+          ? '✉ Draft created with PDF attached — tap your draft at the top of Drafts to review and send'
+          : '✉ Draft opened — PO PDF attached. Review and send!', 7000);
+        return;
+      }
+    }
+  } catch(draftErr) { /* fall through to OWA compose */ }
+
+  // ── Fallback: copy HTML to clipboard + open OWA compose ──────────────────
   try {
     await copyEmailHtmlShared(htmlSrc);
   } catch(err) {
-    await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,''));
+    try { await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,'')); } catch(e2) { /* clipboard unavailable */ }
   }
+  let owaUrl = 'https://outlook.office.com/mail/deeplink/compose?to=' + encodeURIComponent(toAddr) + '&subject=' + encodeURIComponent(e.subject);
+  if (ccAddr) owaUrl += '&cc=' + encodeURIComponent(ccAddr);
+  window.open(owaUrl, '_blank');
+  showToast('✉ HTML body copied to clipboard — click in the email body and paste with Cmd+V', 6000);
+}
 
-  // Open mailto: with To, CC, and Subject pre-filled, then user pastes the body
-  let mailto = 'mailto:' + toAddr + '?subject=' + encodeURIComponent(e.subject);
-  if (ccAddr) mailto += '&cc=' + ccAddr;
-  window.location.href = mailto;
+// Returns true when running on a phone/tablet browser.
+// On mobile, OWA's webLink triggers a native-app handoff that fails for API drafts,
+// so we redirect to the Drafts folder instead (draft lands at the top).
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android|Mobile|Tablet/i.test(navigator.userAgent);
+}
 
-  // Show toast long enough for user to see it after Outlook opens (6 seconds)
-  showToast('✉ HTML body copied to clipboard — click in the email body and paste with Ctrl+V (Windows) or Cmd+V (Mac)', 6000);
+// ── EMAIL SIGNATURE ───────────────────────────────────────────────────────
+function openSignatureModal() {
+  const saved = localStorage.getItem('mph_po_email_signature') || '';
+  document.getElementById('signatureInput').value = saved;
+  document.getElementById('signaturePreview').style.display = 'none';
+  const overlay = document.getElementById('signatureModal');
+  overlay.style.display = 'flex';
+}
+function closeSignatureModal() {
+  document.getElementById('signatureModal').style.display = 'none';
+}
+function saveSignature() {
+  const sig = document.getElementById('signatureInput').value.trim();
+  if (sig) {
+    localStorage.setItem('mph_po_email_signature', sig);
+    showToast('✅ Signature saved — will be appended to all email drafts', 3500);
+  } else {
+    localStorage.removeItem('mph_po_email_signature');
+    showToast('Signature cleared', 2500);
+  }
+  closeSignatureModal();
+}
+function clearSignature() {
+  document.getElementById('signatureInput').value = '';
+  document.getElementById('signaturePreview').style.display = 'none';
+}
+function previewSignature() {
+  const sig = document.getElementById('signatureInput').value.trim();
+  const preview = document.getElementById('signaturePreview');
+  if (sig) { preview.innerHTML = sig; preview.style.display = 'block'; }
+  else { preview.style.display = 'none'; }
+}
+function getSignatureHtml() {
+  return localStorage.getItem('mph_po_email_signature') || '';
+}
+
+// Checks the signed-in user's email against USER_SIGNATURES and auto-loads
+// their signature into localStorage. Called after login and on page load.
+function applyUserSignature() {
+  if (!msalInstance) return;
+  const accounts = msalInstance.getAllAccounts();
+  if (!accounts.length) return;
+  const email = (accounts[0].username || '').toLowerCase();
+  const sig = USER_SIGNATURES[email];
+  if (sig) {
+    localStorage.setItem('mph_po_email_signature', sig.trim());
+    console.log('Signature auto-loaded for', email);
+  }
 }
 
 function showToast(msg, duration) {
@@ -1676,12 +1766,79 @@ const MSAL_CONFIG = {
   auth: {
     clientId: "b907c7ac-306b-4b00-b9a6-c639d581d98f",
     authority: "https://login.microsoftonline.com/3abf2937-e518-43e5-b2a4-456eecfa8b00",
-    redirectUri: "https://mphunited.github.io/Generate/PO.html",
+    redirectUri: "https://mphunited.github.io/PO-Generator-Test/PO-TEST.html",
   },
   cache: { cacheLocation: "sessionStorage" }
 };
 
 const GRAPH_SCOPES  = ["Files.Read.All", "Sites.Read.All", "Sites.ReadWrite.All"];
+const MAIL_SCOPES   = ["Mail.ReadWrite"];  // separate scope — requested only when sending email
+
+// ── PER-USER EMAIL SIGNATURES ─────────────────────────────────────────────
+// Add each user's email (lowercase) and their signature HTML here.
+// The logo image must be hosted at a public URL — replace LOGO_URL_HERE with
+// the actual path (e.g. https://www.mphunited.com/images/logo.png).
+// ← Replace with the direct image URL (right-click logo on mphunited.com → Copy image address)
+const MPH_LOGO_URL = 'https://www.mphunited.com/assets/images/logo--long.svg';
+
+const USER_SIGNATURES = {
+
+  // ── Peter Mannering — Controller ─────────────────────────────────────────
+  'peter@mphunited.com': `
+<p style="margin:0 0 14px 0;font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;">Regards,</p>
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
+  <tr><td style="padding-bottom:2px;"><strong>Peter Mannering</strong> &nbsp;<span style="color:#1a3a6e;font-weight:700;">MPH United | Controller</span></td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">IBC Container Manufacturing &amp; Recycling</td></tr>
+  <tr><td style="padding-bottom:8px;"><a href="mailto:peter@mphunited.com" style="color:#1a3a6e;text-decoration:none;">peter@mphunited.com</a> &nbsp;&nbsp; 248-765-2703</td></tr>
+  <tr><td style="padding-bottom:8px;"><img src="${MPH_LOGO_URL}" alt="MPH United" style="height:60px;display:block;" /></td></tr>
+  <tr><td style="padding-bottom:2px;"><a href="mailto:accountspayable@mphunited.com" style="color:#1a3a6e;text-decoration:none;">accountspayable@mphunited.com</a></td></tr>
+  <tr><td style="padding-bottom:2px;"><a href="mailto:orders@mphunited.com" style="color:#1a3a6e;text-decoration:none;">orders@mphunited.com</a></td></tr>
+  <tr><td><a href="https://www.mphunited.com" style="color:#1a3a6e;text-decoration:none;">www.mphunited.com</a></td></tr>
+</table>`,
+
+  // ── Christina Bayne — General Manager ────────────────────────────────────
+  'christina@mphunited.com': `
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
+  <tr><td style="padding-bottom:2px;"><strong>Christina Bayne</strong></td></tr>
+  <tr><td style="padding-bottom:2px;color:#555;">General Manager</td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">251-978-0563</td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">IBC Container Manufacturing &amp; Recycling</td></tr>
+  <tr><td style="padding-bottom:8px;"><a href="https://www.mphunited.com" style="color:#1a3a6e;text-decoration:none;">Website: www.mphunited.com</a></td></tr>
+  <tr><td><img src="${MPH_LOGO_URL}" alt="MPH United" style="height:60px;display:block;" /></td></tr>
+</table>`,
+
+  // ── Jordan Mannering — Purchasing ─────────────────────────────────────────
+  'jordan@mphunited.com': `
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
+  <tr><td style="padding-bottom:2px;"><strong>Jordan Mannering</strong></td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">MPH United | Purchasing</td></tr>
+  <tr><td style="padding-bottom:2px;color:#555;">C: 248.631.6802</td></tr>
+  <tr><td><a href="mailto:jordan@mphunited.com" style="color:#1a3a6e;text-decoration:none;">E: jordan@mphunited.com</a></td></tr>
+</table>`,
+
+  // ── Jack Schlaack — IT & Customer Service ─────────────────────────────────
+  'jack@mphunited.com': `
+<p style="margin:0 0 14px 0;font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;">With Gratitude,</p>
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
+  <tr><td style="padding-bottom:2px;"><strong>Jack Schlaack</strong></td></tr>
+  <tr><td style="padding-bottom:2px;color:#555;">IT &amp; Customer Service</td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">M: 517.881.8309</td></tr>
+  <tr><td style="padding-bottom:8px;">IBC Container Manufacturing and Recycling &nbsp;<a href="https://www.mphunited.com" style="color:#1a3a6e;text-decoration:none;">www.mphunited.com</a></td></tr>
+  <tr><td><img src="${MPH_LOGO_URL}" alt="MPH United" style="height:60px;display:block;" /></td></tr>
+</table>`,
+
+  // ── Keith Ferrell — Customer Service ──────────────────────────────────────
+  'keith@mphunited.com': `
+<p style="margin:0 0 14px 0;font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;">Thank you,</p>
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
+  <tr><td style="padding-bottom:2px;"><strong>Keith Ferrell</strong></td></tr>
+  <tr><td style="padding-bottom:2px;color:#555;">Customer Service</td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">M: 801-900-7709</td></tr>
+  <tr><td style="padding-bottom:6px;color:#555;">IBC Container Manufacturing &amp; Recycling</td></tr>
+  <tr><td><a href="https://www.mphunited.com" style="color:#1a3a6e;text-decoration:none;">www.mphunited.com</a></td></tr>
+</table>`,
+
+};
 const DRIVE_ID      = "b!N48Wq05iEEOzX1swiNCEk8EKL-4bQeBMn0eOwmpi5atLWWczvFYQQrxH9feF-RUh";
 const SPO_SITE_PATH = "mphunited.sharepoint.com:/sites/MPHCSRsandAccounting:";
 const FILE_NAME     = "MPH Orders.xlsm";
@@ -1740,7 +1897,15 @@ async function initMsal() {
     msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
     await msalInstance.initialize();
     console.log("MSAL initialized OK");
-    try { await msalInstance.handleRedirectPromise(); } catch(e) { console.warn("redirect:", e); }
+    try {
+      const redirectResult = await msalInstance.handleRedirectPromise();
+      if (redirectResult) {
+        // Page loaded as the result of a mobile loginRedirect completing — finish login
+        applyUserSignature();
+        refreshImport();
+      }
+    } catch(e) { console.warn("redirect:", e); }
+    applyUserSignature(); // also runs for already-signed-in users on normal page load
   } catch(e) {
     console.error("MSAL init error:", e);
   }
@@ -1754,6 +1919,26 @@ async function getToken() {
     const r = await msalInstance.acquireTokenSilent({ scopes: GRAPH_SCOPES, account: accounts[0] });
     return r.accessToken;
   } catch(e) { return null; }
+}
+
+// Acquires a Mail.ReadWrite token.
+// Desktop: tries silent first, then a one-time consent popup on first use.
+// Mobile: silent only — popup avoided entirely to prevent nested-popup errors.
+// If all else fails, caller falls back to OWA compose + clipboard.
+async function getMailToken() {
+  if (!msalInstance) return null;
+  const accounts = msalInstance.getAllAccounts();
+  if (!accounts.length) return null;
+  try {
+    const r = await msalInstance.acquireTokenSilent({ scopes: MAIL_SCOPES, account: accounts[0] });
+    return r.accessToken;
+  } catch(e) {
+    if (isMobileDevice()) return null; // no popup on mobile
+    try {
+      const r = await msalInstance.acquireTokenPopup({ scopes: MAIL_SCOPES });
+      return r.accessToken;
+    } catch(e2) { return null; }
+  }
 }
 
 async function signIn() {
@@ -1773,7 +1958,14 @@ async function signIn() {
     return;
   }
   try {
+    if (isMobileDevice()) {
+      // Mobile browsers block popups — use redirect instead.
+      // handleRedirectPromise() in initMsal() will complete login on return.
+      await msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+      return; // page will navigate away; code below won't run
+    }
     await msalInstance.loginPopup({ scopes: GRAPH_SCOPES });
+    applyUserSignature();
     refreshImport();
   } catch(e) {
     console.error("Login failed:", e);
@@ -1804,6 +1996,109 @@ async function graphPatch(path, body, etag) {
     method: "PATCH", headers, body: JSON.stringify(body)
   });
   return r.status; // 200/204 = success, 412 = conflict (caller retries)
+}
+
+// Creates a draft email via Graph API and returns the message object (including webLink).
+// webLink opens the draft directly in OWA so the user only needs to attach the PDF and send.
+async function createMailDraft(token, toAddr, ccAddr, subject, htmlBody) {
+  const parseAddrs = str => (str || '').split(';').map(a => a.trim()).filter(Boolean)
+                              .map(a => ({ emailAddress: { address: a } }));
+  // Append stored signature (separated by a horizontal rule)
+  const sig = getSignatureHtml();
+  const fullBody = sig ? htmlBody + '<br><hr style="border:none;border-top:1px solid #e0dbd2;margin:16px 0;">' + sig : htmlBody;
+  const payload = {
+    subject,
+    body: { contentType: "HTML", content: fullBody },
+    toRecipients: parseAddrs(toAddr)
+  };
+  const cc = parseAddrs(ccAddr);
+  if (cc.length) payload.ccRecipients = cc;
+
+  const r = await fetch("https://graph.microsoft.com/v1.0/me/messages", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) throw new Error("Graph " + r.status);
+  return r.json();
+}
+
+// Attaches a file (base64) to an existing draft message via Graph API.
+async function attachFileToDraft(token, messageId, filename, base64Content) {
+  const r = await fetch('https://graph.microsoft.com/v1.0/me/messages/' + messageId + '/attachments', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      '@odata.type': '#microsoft.graph.fileAttachment',
+      name: filename,
+      contentType: 'application/pdf',
+      contentBytes: base64Content
+    })
+  });
+  if (!r.ok) throw new Error('Attach ' + r.status);
+}
+
+// ── PDF capture helper ───────────────────────────────────────────────────────
+// html2canvas captures an element relative to the whole document, which means
+// a poPaper buried deep in the DOM produces a PDF with a large blank area at
+// the top.  The fix: temporarily move the element to be the FIRST child of
+// <body> (document y ≈ 0), capture it, then restore it.  This is scroll-
+// position independent and works identically on desktop and mobile.
+async function withPaperAtTop(paper, fn) {
+  const parent      = paper.parentNode;
+  const nextSibling = paper.nextSibling;
+  const savedStyle  = paper.style.cssText || '';
+  // Always use 760px — the desktop/letter width.  On mobile, paper.offsetWidth
+  // is the narrow viewport width which causes content to wrap onto a second page.
+  const PDF_WIDTH = 760;
+
+  // Inject a temporary <style> that overrides mobile-responsive CSS so the PDF
+  // always renders with the full desktop layout, regardless of viewport width.
+  const overrideStyle = document.createElement('style');
+  overrideStyle.id = 'pdf-mobile-override';
+  overrideStyle.textContent = [
+    '.po-top{display:flex!important;flex-direction:row!important;justify-content:space-between!important;align-items:flex-start!important;gap:0!important;}',
+    '.po-badge{text-align:right!important;}',
+    '.po-badge .po-title{font-size:28px!important;}',
+    '.po-company h1{font-size:22px!important;letter-spacing:2px!important;}',
+    '.po-meta{display:grid!important;grid-template-columns:1fr 1fr!important;}',
+    '.po-meta-box{border-right:1px solid rgba(26,22,18,0.12)!important;}',
+    '.po-meta-box:nth-child(2n){border-right:none!important;}',
+    '.po-sig{display:grid!important;grid-template-columns:1fr 1fr!important;gap:40px!important;}',
+    '.po-paper{padding:44px 52px!important;max-width:none!important;}'
+  ].join('');
+  document.head.appendChild(overrideStyle);
+
+  // Move to top of <body>
+  document.body.insertBefore(paper, document.body.firstChild);
+  paper.style.cssText = 'position:static;margin:0;width:' + PDF_WIDTH + 'px;';
+  window.scrollTo(0, 0);
+
+  // Give the browser two frames to recalculate layout before html2canvas fires
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  try {
+    return await fn();
+  } finally {
+    paper.style.cssText = savedStyle;
+    if (parent) {
+      if (nextSibling) parent.insertBefore(paper, nextSibling);
+      else             parent.appendChild(paper);
+    }
+    // Remove the override styles
+    const ov = document.getElementById('pdf-mobile-override');
+    if (ov) ov.remove();
+  }
+}
+
+// Converts a Blob to a base64 string (no data-URL prefix).
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 // ── LOAD ORDERS ───────────────────────────────────────────────────────────
@@ -1912,6 +2207,8 @@ function switchImportSource(src) {
   document.getElementById("btnLoadOrder").disabled  = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled  = true;
+  document.getElementById("btnSplitRegular").style.display = "none";
+  document.getElementById("btnSplitRegular").disabled = true;
   const vf = document.getElementById("filterVendorSheet");
   vf.innerHTML = '<option value="">All Vendors</option>'; vf.disabled = true;
   document.getElementById("importSearch").value = ""; document.getElementById("importSearch").disabled = true;
@@ -2098,6 +2395,8 @@ function filterImportTable() {
   document.getElementById("btnLoadSplit").disabled = true;
   document.getElementById("btnSplitMultiPO").style.display = "none";
   document.getElementById("btnSplitMultiPO").disabled = true;
+  document.getElementById("btnSplitRegular").style.display = "none";
+  document.getElementById("btnSplitRegular").disabled = true;
   document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
   renderImportTable();
 }
@@ -2131,6 +2430,7 @@ function renderImportTable() {
     const d = o.desc||"—";
     return "<tr onclick=\"selectImportRow("+i+")\" id=\"irow-"+i+"\">" +
       "<td class=\"td-status\"><span class=\"status-pill "+statusPillClass(o.status)+"\">"+st+"</span></td>" +
+      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
       "<td class=\"td-cust\">"+(o.customer||"—")+"</td>" +
       "<td style=\"white-space:nowrap;color:var(--gold);font-weight:600\">"+(o.mph_po||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+(o.cust_po||"—")+"</td>" +
@@ -2139,13 +2439,12 @@ function renderImportTable() {
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.buy||"—")+"</td>" +
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.sell||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+fmtDate(o.ship_date)+"</td>" +
-      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.freight||"—")+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.csr||"—")+"</td></tr>";
   }).join("");
   wrap.innerHTML = "<table class=\"import-table\"><thead><tr>" +
-    "<th>Status</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
-    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Vendor</th><th>Freight</th><th>CSR</th>" +
+    "<th>Status</th><th>Vendor</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
+    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Freight</th><th>CSR</th>" +
     "</tr></thead><tbody>"+rows+"</tbody></table>";
 }
 
@@ -2167,6 +2466,7 @@ function updateImportFooter() {
   const btnLoad = document.getElementById("btnLoadOrder");
   const btnSplit = document.getElementById("btnLoadSplit");
   const btnSplitMulti = document.getElementById("btnSplitMultiPO");
+  const btnSplitReg = document.getElementById("btnSplitRegular");
   const btnMulti = document.getElementById("btnMultiPO");
   const hint = document.getElementById("importFooterHint");
   const count = importSelectedIdxs.length;
@@ -2174,6 +2474,7 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select up to 20 for Multiple POs";
     return;
@@ -2184,22 +2485,32 @@ function updateImportFooter() {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     const d = o1.desc||"";
     hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load or Multiple POs";
+  } else if (count === 2) {
+    btnLoad.disabled = true;
+    btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
+    btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
+    btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
+    hint.textContent = "⚡ Split Load or ⚡# Split+Multi or ⚡+ Split & Regular or 📄 Multiple POs (" + count + "): " + names + " • Click another row to add";
   } else if (count <= 4) {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
     btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load or ⚡📄 Split+Multi or 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4 for Split Load, max 20 for Multiple POs)" : " • Split Load max reached — click more rows for Multiple POs only");
+    hint.textContent = "⚡ Split Load | ⚡# Split+Multi | ⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add" : " • Max reached for Split modes");
   } else {
     // 5–20: Multiple POs only (Split Load capped at 4)
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
+    hint.textContent = "⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
   }
 }
 
@@ -2450,6 +2761,189 @@ async function loadSplitAndGenerateMultiple() {
   await generatePO();
 }
 
+// ── Split + Regular Load ───────────────────────────────────────────────────
+// Generates TWO POs from a 3–4 row selection:
+//   • PO 1 (Split Load)  — rows 0..N-2 combined into one PO with SPLIT LOAD line items
+//   • PO 2 (Regular)     — last row as a standard single-line PO
+// One combined vendor email covers both.
+async function loadSplitAndRegular() {
+  const allIdxs = importSelectedIdxs.slice();
+  if (allIdxs.length < 2) {
+    showToast('Select at least 2 rows — rows with "split load" in Appt. Time or P/N become the split PO; others become the regular PO.', 5000);
+    return;
+  }
+
+  // Auto-detect split vs regular based on Appt. Time or P/N containing "split load" (case-insensitive)
+  const isSplitRow = idx => {
+    const o = importFiltered[idx];
+    const appt = (o.appt || '').toLowerCase();
+    const pn   = (o.pn   || '').toLowerCase();
+    return appt.includes('split load') || pn.includes('split load');
+  };
+
+  const splitIdxs  = allIdxs.filter(i => isSplitRow(i));
+  const regularIdxs = allIdxs.filter(i => !isSplitRow(i));
+
+  if (splitIdxs.length === 0) {
+    showToast('No split load rows detected. Make sure at least one selected row has "split load" in the Appt. Time or P/N column.', 6000);
+    return;
+  }
+  if (regularIdxs.length === 0) {
+    showToast('No regular load rows detected. Make sure at least one selected row does NOT have "split load" in the Appt. Time or P/N column.', 6000);
+    return;
+  }
+
+  const splitRaws  = splitIdxs.map(i => importFiltered[i]);
+  const regularRaw = importFiltered[regularIdxs[0]]; // use first regular row
+  const pp = s => parseFloat(parseNum(s)) || 0;
+
+  const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
+  const vendor = VENDORS[vk] || { name: splitRaws[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
+
+  document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("isMoveOrders").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  document.getElementById("revisedPONum").value = "";
+
+  setLoading(true, 'Building Split & Regular POs…', 'Generating PO numbers');
+  closeImport();
+
+  // Assign two PO numbers
+  const splitPoNum   = await genPONum();
+  const regularPoNum = await genPONum();
+  lastMultiPOPoNums  = [splitPoNum, regularPoNum];
+  lastMultiPOMode    = 'splitRegular';
+
+  // Notes for the split PO — merge unique notes with per-load labels if they differ
+  const allRawNotes   = splitRaws.map(o => (o.po_notes||'').trim()).filter(Boolean);
+  const uniqueNotes   = allRawNotes.filter((v,i,a) => a.indexOf(v)===i);
+  let splitNotes;
+  if (uniqueNotes.length === 1) {
+    splitNotes = uniqueNotes[0];
+  } else {
+    splitNotes = splitRaws.map((o,idx) => {
+      const n = (o.po_notes||'').trim();
+      return n ? 'Split Load ' + (idx+1) + ': ' + n : null;
+    }).filter(Boolean).join('\n\n');
+  }
+
+  const splitO1 = splitRaws[0];
+  const splitOrderObj = {
+    customerName: splitO1.customer || '',
+    customerPO: splitO1.cust_po || 'N/A',
+    orderDate: fmtDate(new Date().toISOString().split('T')[0]),
+    shipTo: splitO1.ship_to || '--',
+    customerEmail: parseCustomerContacts(splitO1.contacts).email,
+    customerContactFmt: parseCustomerContacts(splitO1.contacts).toFmt,
+    customerContactCc: parseCustomerContacts(splitO1.contacts).cc,
+    shipDate: fmtDate(splitO1.ship_date),
+    shipVia: splitO1.freight || '',
+    apptTime: splitO1.appt || '',
+    salesOrder: splitO1.alliance_so || '',
+    specialInstructions: splitNotes,
+    isRevised: false, isBlind: false,
+    isCoastal: (splitO1.source==='recycling' && splitO1.sheet==='Coastal Container'),
+    vendor,
+    lines: splitRaws.map((o, idx) => ({
+      desc: 'SPLIT LOAD ' + (idx+1) + ' \u2014 ' + (o.desc || ''),
+      pn: o.pn || '',
+      qty: pp(o.qty) || 1,
+      price: pp(o.buy),
+      sell: pp(o.sell)
+    })),
+    get total() { return this.lines.reduce((s,l) => s + l.qty * l.price, 0); }
+  };
+
+  const regOrderObj = {
+    customerName: regularRaw.customer || '',
+    customerPO: regularRaw.cust_po || 'N/A',
+    orderDate: fmtDate(new Date().toISOString().split('T')[0]),
+    shipTo: regularRaw.ship_to || '--',
+    customerEmail: parseCustomerContacts(regularRaw.contacts).email,
+    customerContactFmt: parseCustomerContacts(regularRaw.contacts).toFmt,
+    customerContactCc: parseCustomerContacts(regularRaw.contacts).cc,
+    shipDate: fmtDate(regularRaw.ship_date),
+    shipVia: regularRaw.freight || '',
+    apptTime: regularRaw.appt || '',
+    salesOrder: regularRaw.alliance_so || '',
+    specialInstructions: regularRaw.po_notes || '',
+    isRevised: false, isBlind: false,
+    isCoastal: (regularRaw.source==='recycling' && regularRaw.sheet==='Coastal Container'),
+    vendor,
+    lines: [{ desc: regularRaw.desc||'IBC Product', pn: regularRaw.pn||'', qty: pp(regularRaw.qty)||1, price: pp(regularRaw.buy), sell: pp(regularRaw.sell) }],
+    get total() { return this.lines.reduce((s,l) => s + l.qty * l.price, 0); }
+  };
+
+  const orders  = [splitOrderObj, regOrderObj];
+  const poNums  = [splitPoNum, regularPoNum];
+  lastMultiPORawOrders = [...splitRaws, regularRaw];
+
+  setLoading(false);
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('poDocument').classList.remove('active');
+
+  const multiDoc = document.getElementById('multiPODocument');
+
+  const tabsHtml =
+    `<button class="output-tab active" onclick="switchMultiTab(0,this)">📄 Split Load PO (${splitPoNum})</button>` +
+    `<button class="output-tab" onclick="switchMultiTab(1,this)">📄 Regular PO: ${escHtml(regOrderObj.customerName)} (${regularPoNum})</button>` +
+    `<button class="output-tab" onclick="switchMultiTab(2,this)">📧 Vendor Email</button>`;
+
+  const panelsHtml =
+    `<div class="output-panel active" id="mpo-panel-0">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="printMultiPO(0,'${splitPoNum}')">🖨 Save Split Load PO PDF</button>
+      </div>
+      <div class="po-paper" id="mpo-paper-0"></div>
+    </div>
+    <div class="output-panel" id="mpo-panel-1">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="printMultiPO(1,'${regularPoNum}')">🖨 Save Regular PO PDF</button>
+      </div>
+      <div class="po-paper" id="mpo-paper-1"></div>
+    </div>`;
+
+  const vEmails     = parseVendorEmails(vendor.contact, vendor.email);
+  const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNums, vendor);
+
+  const emailPanelHtml =
+    `<div class="output-panel" id="mpo-panel-2">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+      </div>
+      <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Creates a draft in Outlook with both PO PDFs automatically attached — ready to review and send.</div>
+      <div class="email-preview" id="mpo-emailDiv"></div>
+    </div>`;
+
+  multiDoc.innerHTML = `
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+    </div>
+    <div class="no-print po-send-hint" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
+      <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
+      Both PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
+      Or save each PDF individually by clicking <em>Save PO PDF</em> on each tab.
+    </div>
+    <div class="output-tabs">${tabsHtml}</div>
+    ${panelsHtml}${emailPanelHtml}`;
+
+  document.getElementById('mpo-paper-0').innerHTML = buildPOHtml(splitOrderObj, splitPoNum);
+  document.getElementById('mpo-paper-1').innerHTML = buildPOHtml(regOrderObj, regularPoNum);
+
+  multiPOEmailData = {
+    to: vEmails.to,
+    cc: vEmails.cc || '',
+    subject: 'MPH United POs ' + splitPoNum + ', ' + regularPoNum + ' | Split & Regular Load',
+    bodyHtml: combinedHtml,
+    body: ''
+  };
+  renderEmailDiv('mpo-emailDiv', multiPOEmailData);
+
+  multiDoc.classList.add('active');
+  document.title = 'MPH POs ' + splitPoNum + ' (Split) + ' + regularPoNum + ' (Regular)';
+}
+
 async function generateMultiplePOs(fromCheckbox = false) {
   const selIdxs = importSelectedIdxs;
   if (selIdxs.length < 2) return;
@@ -2530,24 +3024,16 @@ async function generateMultiplePOs(fromCheckbox = false) {
   const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNums, vendor);
   panelsHtml += `<div class="output-panel" id="mpo-panel-${orders.length}">
     <div class="po-actions no-print">
-      <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
-      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
     </div>
-    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the POs, save each PDF first, then attach them manually to the email.</div>
+    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Creates a draft in Outlook with all PO PDFs automatically attached — ready to review and send.</div>
     <div class="email-preview" id="mpo-emailDiv"></div>
   </div>`;
 
   multiDoc.innerHTML = `
-    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
-      <div style="flex:1;">
-        <strong>📋 Multiple POs — How to send:</strong><br>
-        <strong>1.</strong> Click <em>⬇ Download All as ZIP</em> to get all POs in one ZIP file, <em>or</em> click each PO tab and <em>Save PO PDF</em> individually.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#3a8a65'" onmouseout="this.style.background='#2d6a4f'">⬇ Download All as ZIP</button>
-        <button onclick="generateMultiplePOs(true)" style="background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
-      </div>
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+      <button class="btn-action" onclick="generateMultiplePOs(true)">↻ Regenerate POs</button>
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}`;
@@ -2579,16 +3065,15 @@ async function printMultiPO(idx, poNum) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
   try {
-    await html2pdf()
-      .set({
+    await withPaperAtTop(paper, () =>
+      html2pdf().set({
         margin: [0.45, 0.45, 0.45, 0.45],
         filename: 'MPH PO ' + (poNum || ('Document-' + idx)) + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      })
-      .from(paper)
-      .save();
+      }).from(paper).save()
+    );
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printMultiPO error:', e);
@@ -2611,15 +3096,14 @@ async function downloadAllMultiPOs() {
       const poNum = lastMultiPOPoNums[i];
       if (btn) btn.textContent = '⏳ PDF ' + (i + 1) + ' of ' + count + '…';
       // Generate as blob (no download triggered yet)
-      const blob = await html2pdf()
-        .set({
+      const blob = await withPaperAtTop(paper, () =>
+        html2pdf().set({
           margin: [0.45, 0.45, 0.45, 0.45],
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, logging: false },
           jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        })
-        .from(paper)
-        .output('blob');
+        }).from(paper).output('blob')
+      );
       zip.file('MPH PO ' + poNum + '.pdf', blob);
     }
     if (btn) btn.textContent = '⏳ Packaging ZIP…';
@@ -2660,15 +3144,55 @@ async function openMultiPOEmail() {
   const ccMatches = (multiPOEmailData.cc||'').match(/[\w.%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/g) || [];
   const ccAddr = ccMatches.join(';');
   const htmlSrc = multiPOEmailData.bodyHtml || '';
+
+  // ── Try Graph API draft (auto-populates full HTML body + attaches all PDFs) ──
+  try {
+    const mailToken = await getMailToken();
+    if (mailToken) {
+      const draft = await createMailDraft(mailToken, toAddr, ccAddr, multiPOEmailData.subject||'', htmlSrc);
+      if (draft && draft.id && draft.webLink) {
+        // Attach each generated PO PDF
+        const count = lastMultiPOPoNums.length;
+        if (count > 0) {
+          showToast('⏳ Generating ' + count + ' PDF attachment' + (count>1?'s':'') + '…', 12000);
+          for (let i = 0; i < count; i++) {
+            const paper = document.getElementById('mpo-paper-' + i);
+            if (!paper) continue;
+            try {
+              const pdfBlob = await withPaperAtTop(paper, () =>
+                html2pdf().set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                  .from(paper).output('blob')
+              );
+              const b64 = await blobToBase64(pdfBlob);
+              await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + '.pdf', b64);
+            } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
+          }
+        }
+        // On mobile, webLink triggers a native-app handoff that blanks the screen.
+        // Open the Drafts folder instead — the new draft is always at the top.
+        const openUrl = isMobileDevice()
+          ? 'https://outlook.office.com/mail/drafts'
+          : draft.webLink;
+        window.open(openUrl, '_blank');
+        const attachMsg = count > 0 ? count + ' PO PDF' + (count > 1 ? 's' : '') + ' attached. ' : '';
+        showToast(isMobileDevice()
+          ? '✉ Draft created — ' + attachMsg + 'Tap your draft at the top of Drafts to review and send'
+          : '✉ Draft opened — ' + attachMsg + 'Review and send!', 7000);
+        return;
+      }
+    }
+  } catch(draftErr) { /* fall through to OWA compose */ }
+
+  // ── Fallback: copy HTML to clipboard + open OWA compose ──────────────────
   try {
     await copyEmailHtmlShared(htmlSrc);
   } catch(err) {
-    await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,''));
+    try { await navigator.clipboard.writeText(htmlSrc.replace(/<[^>]*>/g,'')); } catch(e2) { /* clipboard unavailable */ }
   }
-  let mailto = 'mailto:' + toAddr + '?subject=' + encodeURIComponent(multiPOEmailData.subject||'');
-  if (ccAddr) mailto += '&cc=' + ccAddr;
-  window.location.href = mailto;
-  showToast('✉ HTML body copied to clipboard — click in the email body and paste with Ctrl+V (Windows) or Cmd+V (Mac)', 6000);
+  let owaUrl = 'https://outlook.office.com/mail/deeplink/compose?to=' + encodeURIComponent(toAddr) + '&subject=' + encodeURIComponent(multiPOEmailData.subject||'');
+  if (ccAddr) owaUrl += '&cc=' + encodeURIComponent(ccAddr);
+  window.open(owaUrl, '_blank');
+  showToast('✉ HTML body copied to clipboard — click in the email body and paste with Cmd+V', 6000);
 }
 
 // ── WASH & RETURN PROGRAM ─────────────────────────────────────────────────
@@ -2805,18 +3329,18 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
       var qty = parseQty(l.qty);
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
       return r;
     }).join('');
 
     h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order ' + (idx+1) + ' — ' + escHtml(o.customerName) + '</p>';
-    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:12px;">';
+    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:12pt;">';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:3px 0;">' + escHtml(o.customerPO) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:3px 0;">' + escHtml(o.shipDate) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship To</td><td style="padding:3px 0;">' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</td></tr>';
@@ -2828,14 +3352,14 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
     h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
     h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
     h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:12pt;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
   });
 
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:12px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">CPU — Wash &amp; Return</td></tr>';
   h += '</table>';
-  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:12px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:12pt;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -2854,7 +3378,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("5 star") || v.includes("five star")) return "fivestar_bristow";
   if (v.includes("southeast") || v.includes("sec ")) return "sec_cleveland";
   if (v.includes("great plains") && v.includes("garden city")) return "gpc_gardencity";
-  if (v.includes("gjl")) return "gjl";
+  if (v.includes("gjl")) return "gjl_sts";
   if (v.includes("superior tote") && v.includes("greenwood")) return "sts_greenwood";
   if (v.includes("superior tote") && v.includes("summitville")) return "sts_summitville";
   if (v.includes("united container")) return "ucg_hillsboro";
@@ -2879,7 +3403,7 @@ function matchVendorKey(v, sheet) {
     const s = sheet.toLowerCase();
     if (s.includes("basco")) return "basco";
     if (s.includes("eco green") || s.includes("ecogreen")) return "ecog_houston";
-    if (s.includes("gjl")) return "gjl";
+    if (s.includes("gjl")) return "gjl_sts";
     if (s.includes("cpp")) return "cpp_lakewales";
     if (s.includes("connectionz")) return "containerconnectionz_wayzata";
     if (s.includes("engy")) return "engy_houston";
@@ -2977,6 +3501,27 @@ setTimeout(initMsal, 300);
       <span class="mobile-tab-icon">📄</span>
       <span>Preview</span>
     </button>
+  </div>
+</div>
+
+<!-- ═══ SIGNATURE MODAL ═══ -->
+<div class="modal-overlay" id="signatureModal" style="display:none;position:fixed;inset:0;background:rgba(26,22,18,0.55);z-index:600;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:560px;width:95vw;">
+    <div class="modal-title">✍ Email Signature <button class="modal-close" onclick="closeSignatureModal()">&#10005;</button></div>
+    <div class="modal-note">Paste your Outlook signature below. It will be automatically appended to every email draft. Saved locally in your browser.</div>
+    <div class="field">
+      <label>Signature HTML <span style="font-weight:400;font-size:11px;color:var(--ink2);">— paste from Outlook (right-click → View Source on your signature)</span></label>
+      <textarea id="signatureInput" rows="8" placeholder="Paste your signature HTML here, e.g.&#10;&lt;p&gt;Best regards,&lt;/p&gt;&#10;&lt;p&gt;&lt;strong&gt;Jack Smith&lt;/strong&gt;&lt;br&gt;MPH United&lt;/p&gt;" style="width:100%;font-family:'Courier New',monospace;font-size:11px;padding:8px;border:1px solid var(--border);border-radius:6px;resize:vertical;min-height:140px;outline:none;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+    <div id="signaturePreview" style="display:none;border:1px solid var(--border);border-radius:6px;padding:12px 16px;background:#fafaf8;margin-top:4px;font-size:13px;"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="previewSignature()" style="flex:1;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:8px;font-family:'Aptos','Inter',sans-serif;font-size:12px;cursor:pointer;">👁 Preview</button>
+      <button onclick="clearSignature()" style="background:transparent;border:1px solid rgba(200,60,60,0.4);color:#c03c3c;border-radius:6px;padding:8px 14px;font-family:'Aptos','Inter',sans-serif;font-size:12px;cursor:pointer;">Clear</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeSignatureModal()">Cancel</button>
+      <button class="btn-modal-save" onclick="saveSignature()">Save Signature</button>
+    </div>
   </div>
 </div>
 
