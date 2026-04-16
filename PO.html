@@ -575,6 +575,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="basco">Basco</option>
             <option value="advatech_houston">Advatech Industries — Houston, TX</option>
             <option value="cpp_lakewales">CPP — Lake Wales, FL</option>
+            <option value="kp_rockyriver">KP Pallet &amp; Packaging — Rocky River, OH</option>
           </optgroup>
         </select>
       </div>
@@ -3403,6 +3404,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("enterprise marking") || v.includes("emp(") || v.includes("emp ")) return "emp_fishers";
   if (v.includes("tri-sure") || v.includes("trisure")) return "trisure";
   if (v.includes("advatech")) return "advatech_houston";
+  if (v.includes("kp pallet") || v.includes("kppallet")) return "kp_rockyriver";
   // Sheet-name fallbacks for when the vendor column is blank or uses a short name
   if (sheet) {
     const s = sheet.toLowerCase();
@@ -3416,6 +3418,7 @@ function matchVendorKey(v, sheet) {
     if (s.includes("enterprise marking") || s.includes("emp")) return "emp_fishers";
     if (s.includes("tri-sure") || s.includes("trisure")) return "trisure";
     if (s.includes("advatech")) return "advatech_houston";
+    if (s.includes("kp pallet") || s.includes("kppallet")) return "kp_rockyriver";
   }
   return "";
 }
