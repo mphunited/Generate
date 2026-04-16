@@ -766,7 +766,8 @@ const VENDORS = {
   basco:{name:"Basco",address:"",contact:"Sheila M. O'Neil",phone:"",email:"sheilao@bascousa.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"Basco Products",price:""}]},
   cpp_lakewales:{name:"CPP",address:"PO Box 3752\nLake Wales, FL 33859",contact:"Gary Yarbrough – (863) 638-6335",phone:"(863) 638-6335",email:"so@cpp-usa.com; david@cpp-usa.com; gary@cpp-usa.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"",price:""}]},
   advatech_houston:{name:"MPH United / Advatech Industries",address:"9159 Wallisville Road\nHouston TX, 77029",contact:"Darshan Advatech - 713-282-4182",phone:"713-282-4182",email:"darshan@advatechindustries.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
-  ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]}
+  ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]},
+  kp_rockyriver:{name:"KP Pallet & Packaging",address:"19885 Detroit Road, #294\nRocky River, OH 44116",contact:"Mel",phone:"440-821-0865",email:"Mel@KPPallet.com; orders@mphunited.com",dockHours:"",dockContact:"",notes:"",leadContact:"",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]}
 };
 
 // -- VENDOR GREETINGS -------------------------------------------------------
@@ -780,6 +781,7 @@ const VENDOR_GREETINGS = {
   "MPH United / Alliance Container -- Greenwood, IN":         "Jessica",
   "MPH United / Alliance Container Texas -- Hillsboro, TX":   "Alliance Container Texas",
   "MPH United / Eco Green -- Houston, TX":                    "Sam",
+  "KP Pallet & Packaging":                                    "KP Pallet & Packaging",
   "MPH United / 5 Star Industrial Containers -- Bristow, OK": "5 Star",
   "MPH United / SEC SouthEast Container -- Cleveland, MS":    "SEC",
   "MPH United / GPC Great Plains Container -- Garden City, KS": "GPC",
@@ -801,6 +803,8 @@ const VENDOR_GREETINGS = {
   "Container Connectionz":                                    "Brian",
   "Basco":                                                    "Sheila",
   "MPH United / Advatech Industries":                         "Darshan",
+  "MPH United / Eco Green -- Houston, TX":                    "Sam",
+  "KP Pallet & Packaging":                                    "KP Pallet & Packaging",
 };
 function getVendorGreeting(vendor) {
   if (!vendor || !vendor.name) return '';
