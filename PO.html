@@ -636,6 +636,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
           <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;">
             <input type="checkbox" id="isBlindShipment" onchange="onCheckboxChange();" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
             Blind Shipment
+            <span id="blindAutoHint" style="display:none;font-size:11px;font-weight:500;color:var(--gold);font-style:italic;">(Auto for this vendor)</span>
           </label>
         </div>
       </div>
@@ -899,7 +900,17 @@ function selectCustomer(name) {
 // -- VENDOR LOAD -----------------------------------------------------------
 const CORE_VENDOR_KEYS = ['core_houston','core_nashua','core_shreveport','core_southholland','core_waterloo','core_calhoun'];
 
+// Vendors that should default to Blind Shipment when selected. User can still uncheck.
+// To add/remove: edit this list, no other changes needed.
+const BLIND_VENDOR_KEYS = [
+  'core_houston','core_nashua','core_shreveport','core_southholland','core_waterloo','core_calhoun',
+  'advatech_houston',
+  'ecog_houston',
+  'tld_socal'
+];
+
 function isCore(key) { return CORE_VENDOR_KEYS.includes(key); }
+function isBlindByDefault(key) { return BLIND_VENDOR_KEYS.includes(key); }
 
 function setPNVisible(show) {
   document.querySelectorAll('.pn-col').forEach(el => el.classList.toggle('visible', show));
@@ -955,10 +966,12 @@ function makeRowHTML(desc, pn, price, showPN) {
 
 function loadVendor() {
   const key = document.getElementById('vendorSelect').value;
+  const blindHint = document.getElementById('blindAutoHint');
   if (!key || !VENDORS[key]) {
     document.getElementById('vendorCard').classList.remove('active');
     const cw = document.getElementById('chipsWrap'); if (cw) cw.style.display = 'none';
     setPNVisible(false);
+    if (blindHint) blindHint.style.display = 'none';
     return;
   }
   const v = VENDORS[key];
@@ -973,6 +986,18 @@ function loadVendor() {
   const coreVendor = isCore(key);
   setPNVisible(coreVendor);
   buildChips(v.products, key);
+
+  // Auto-blind shipment for vendors in BLIND_VENDOR_KEYS.
+  // Soft default: re-applies on every vendor change. User can still uncheck after.
+  const blindCheckbox = document.getElementById('isBlindShipment');
+  if (blindCheckbox) {
+    if (isBlindByDefault(key)) {
+      blindCheckbox.checked = true;
+      if (blindHint) blindHint.style.display = 'inline';
+    } else {
+      if (blindHint) blindHint.style.display = 'none';
+    }
+  }
 
   // Reset line body to one clean empty row
   const body = document.getElementById('lineBody');
@@ -1868,7 +1893,7 @@ const VENDOR_SHEETS = [
   'GPCN(Great Plains Northstar-SD)','AgTank Solutions-Pumps',
   'Basco','Container Connectionz','Tri-Sure','EMP(Enterprise Marking Product)',
   'Presley Enterprises','ENGY Container Products','ECO Green','CPP',
-  'KP Pallet & Packaging'
+  'KP Pallet & Packaging','Advatech'
 ];
 
 let msalInstance   = null;
