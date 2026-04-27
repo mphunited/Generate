@@ -2831,11 +2831,16 @@ async function loadSplitAndRegular() {
   const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
   const vendor = VENDORS[vk] || { name: splitRaws[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
 
-  document.getElementById("isBlindShipment").checked = false;
+  // Auto-blind for vendors in BLIND_VENDOR_KEYS (mirrors loadVendor logic since
+  // split+regular flow doesn't call loadVendor()).
+  const autoBlindSR = isBlindByDefault(vk);
+  document.getElementById("isBlindShipment").checked = autoBlindSR;
   document.getElementById("isRevised").checked = false;
   document.getElementById("isMoveOrders").checked = false;
   document.getElementById("revisedPOField").style.display = "none";
   document.getElementById("revisedPONum").value = "";
+  const blindHintSR = document.getElementById('blindAutoHint');
+  if (blindHintSR) blindHintSR.style.display = autoBlindSR ? 'inline' : 'none';
 
   setLoading(true, 'Building Split & Regular POs…', 'Generating PO numbers');
   closeImport();
@@ -2986,11 +2991,16 @@ async function generateMultiplePOs(fromCheckbox = false) {
 
   // Reset checkboxes only when loading fresh orders from the import panel
   if (!fromCheckbox) {
-    document.getElementById("isBlindShipment").checked = false;
+    // Auto-blind for vendors in BLIND_VENDOR_KEYS (mirrors loadVendor logic since
+    // multi-PO flow doesn't call loadVendor()).
+    const autoBlind = isBlindByDefault(vk);
+    document.getElementById("isBlindShipment").checked = autoBlind;
     document.getElementById("isRevised").checked = false;
     document.getElementById("isMoveOrders").checked = false;
     document.getElementById("revisedPOField").style.display = "none";
     document.getElementById("revisedPONum").value = "";
+    const blindHint = document.getElementById('blindAutoHint');
+    if (blindHint) blindHint.style.display = autoBlind ? 'inline' : 'none';
   }
 
   lastMultiPORawOrders = rawOrders;
