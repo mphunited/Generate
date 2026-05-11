@@ -2261,17 +2261,32 @@ async function loadOrdersFromSharePoint() {
     const SKIP   = new Set(["COMPLETE","CANCELED","Order Status",""]);
     const orders = [], sheetsFound = [];
 
-    for (const sheetName of VENDOR_SHEETS) {
-      if (!wb.SheetNames.includes(sheetName)) continue;
-      const ws   = wb.Sheets[sheetName];
+    // Case-insensitive sheet lookup so a tab rename (e.g. "Core-IBCS" -> "Core-IBCs")
+    // doesn't silently drop the entire sheet. Also normalizes Excel's leading-apostrophe
+    // text-prefix on headers via cleanHdr. Mirrors the recycling loader's approach.
+    const sheetMap = {};
+    for (const s of wb.SheetNames) sheetMap[s.toLowerCase()] = s;
+    const cleanHdr = h => String(h || "").replace(/^'+/, "").trim().toLowerCase();
+
+    for (const wantedName of VENDOR_SHEETS) {
+      const actualName = sheetMap[wantedName.toLowerCase()];
+      if (!actualName) {
+        console.warn("[PO Import] VENDOR_SHEETS entry not found in workbook:", wantedName);
+        continue;
+      }
+      const ws   = wb.Sheets[actualName];
       const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:false, dateNF:"yyyy-mm-dd" });
       let hdrIdx = -1, hdr = [];
       for (let i = 0; i < Math.min(rows.length, 6); i++) {
-        if (rows[i] && rows[i].includes("MPH PO")) { hdrIdx = i; hdr = rows[i]; break; }
+        if ((rows[i] || []).some(h => cleanHdr(h) === "mph po")) { hdrIdx = i; hdr = rows[i]; break; }
       }
-      if (hdrIdx < 0) continue;
-      sheetsFound.push(sheetName);
-      const col = n => hdr.indexOf(n);
+      if (hdrIdx < 0) {
+        console.warn("[PO Import] Header row not found on sheet:", actualName);
+        continue;
+      }
+      sheetsFound.push(actualName);
+      // Case-insensitive, apostrophe-tolerant column lookup
+      const col = n => hdr.findIndex(h => cleanHdr(h) === n.toLowerCase());
       const C = {
         status:col("Order Status"), order_date:col("Order Date"), csr:col("Sales Person/CSR"),
         mph_po:col("MPH PO"), cust_po:col("Customer PO"), desc:col("Description"), qty:col("Qty"),
@@ -2289,7 +2304,7 @@ async function loadOrdersFromSharePoint() {
         // Only load orders with qualifying PO statuses
         if (status !== "PO REQUEST TO ACCOUNTING" && status !== "PO REVISION TO ACCOUNTING" && status !== "PO MOVING") continue;
         const o = {}; for (const k of Object.keys(C)) o[k] = g(k);
-        o.sheet = sheetName; orders.push(o);
+        o.sheet = actualName; orders.push(o);
       }
     }
 
