@@ -2070,7 +2070,19 @@ async function getToken() {
   try {
     const r = await msalInstance.acquireTokenSilent({ scopes: GRAPH_SCOPES, account: accounts[0] });
     return r.accessToken;
-  } catch(e) { return null; }
+  } catch(e) {
+    // Silent renewal failed (token expired, network hiccup, etc.) — log it and
+    // try an interactive popup so the user doesn't have to manually re-sign in.
+    console.warn("[PO] acquireTokenSilent failed, falling back to popup:", e.message || e);
+    if (isMobileDevice()) return null; // no popup on mobile — caller will show sign-in prompt
+    try {
+      const r = await msalInstance.acquireTokenPopup({ scopes: GRAPH_SCOPES });
+      return r.accessToken;
+    } catch(e2) {
+      console.error("[PO] acquireTokenPopup also failed:", e2.message || e2);
+      return null;
+    }
+  }
 }
 
 // Acquires a Mail.ReadWrite token.
