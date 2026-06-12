@@ -578,6 +578,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="advatech_houston">Advatech Industries — Houston, TX</option>
             <option value="cpp_lakewales">CPP — Lake Wales, FL</option>
             <option value="kp_rockyriver">KP Pallet &amp; Packaging — Cleveland, OH</option>
+            <option value="ibc_gastonia">IBC Specialties — Gastonia, NC</option>
+            <option value="cbc_robstown">Coastal Bend Containers — Robstown, TX</option>
           </optgroup>
         </select>
       </div>
@@ -3942,6 +3944,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("clean environmental")) return "clean_stlouis";
   if (v.includes("centurion") && v.includes("lewisburg")) return "centurion_lewisburg";
   if (v.includes("centurion") && v.includes("memphis")) return "centurion_memphis";
+  if (v.includes("coastal bend")) return "cbc_robstown";
   if (v.includes("coastal")) return "coastal_alvin";
   if (v.includes("eco green") || v.includes("ecogreen")) return "ecog_houston";
   if (v.includes("basco")) return "basco";
@@ -3954,7 +3957,6 @@ function matchVendorKey(v, sheet) {
   if (v.includes("advatech")) return "advatech_houston";
   if (v.includes("kp pallet") || v.includes("kppallet")) return "kp_rockyriver";
   if (v.includes("ibc specialties")) return "ibc_gastonia";
-  if (v.includes("coastal bend")) return "cbc_robstown";
   // Sheet-name fallbacks for when the vendor column is blank or uses a short name
   if (sheet) {
     const s = sheet.toLowerCase();
