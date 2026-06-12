@@ -771,7 +771,8 @@ const VENDORS = {
   advatech_houston:{name:"MPH United / Advatech Industries",address:"9159 Wallisville Road\nHouston TX, 77029",contact:"Darshan Advatech - 713-282-4182",phone:"713-282-4182",email:"darshan@advatechindustries.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]},
   kp_rockyriver:{name:"MPH United / KP Pallet & Packaging",address:"4650 Lakeside Avenue\nCleveland, OH 44114",contact:"Melanie Miller",phone:"(216) 906-3322",email:"mel@kppallet.com; orders@mphunited.com",dockHours:"7:00am – 3:00pm Monday–Friday",dockContact:"Melanie Miller mel@kppallet.com (216) 906-3322",notes:"Carrier contact only for dock times.",leadContact:"",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
-  ibc_gastonia:{name:"MPH United / IBC Specialties -- Gastonia, NC",address:"101 Boxwood Lane\nGastonia, NC 28054",contact:"Jimmy White",phone:"704-865-0777",email:"ibcspec@att.net; orders@mphunited.com",dockHours:"Contact Jimmy White for dock times.",dockContact:"Jimmy White ibcspec@att.net 704-865-0777",notes:"",leadContact:"",products:[{desc:"IBC",price:""}]}
+  ibc_gastonia:{name:"MPH United / IBC Specialties -- Gastonia, NC",address:"101 Boxwood Lane\nGastonia, NC 28054",contact:"Jimmy White",phone:"704-865-0777",email:"ibcspec@att.net; orders@mphunited.com",dockHours:"Contact Jimmy White for dock times.",dockContact:"Jimmy White ibcspec@att.net 704-865-0777",notes:"",leadContact:"",products:[{desc:"IBC",price:""}]},
+  cbc_robstown:{name:"MPH United / Coastal Bend Containers -- Robstown, TX",address:"450 Industrial Avenue\nRobstown, TX 78380",contact:"Fred Murray",phone:"361-261-2134",email:"fred@coastalbendcontainers.com; orders@mphunited.com",dockHours:"Loading Hours: 7:00am-1:00pm. Plant likes to know ETA when truck will be onsite to prepare.",dockContact:"Willie Lewis (Shop Manager) 361-261-2134. BOLs sent to Fred Murray fred@coastalbendcontainers.com",notes:"Plant likes to know an ETA of when truck will be onsite to prepare.",leadContact:"",products:[{desc:"IBC",price:""}]}
 };
 
 // -- VENDOR GREETINGS -------------------------------------------------------
@@ -810,6 +811,7 @@ const VENDOR_GREETINGS = {
   "MPH United / Eco Green -- Houston, TX":                    "Sam",
   "MPH United / KP Pallet & Packaging":                      "Melanie",
   "MPH United / IBC Specialties -- Gastonia, NC":            "Jimmy",
+  "MPH United / Coastal Bend Containers -- Robstown, TX":    "Fred",
 };
 function getVendorGreeting(vendor) {
   if (!vendor || !vendor.name) return '';
@@ -2017,7 +2019,7 @@ const VENDOR_SHEETS = [
   'Basco','Container Connectionz','Tri-Sure','EMP(Enterprise Marking Product)',
   'Presley Enterprises','ENGY Container Products','ECO Green','CPP',
   'KP Pallet & Packaging','Advatech',
-  'IBC Specialties'
+  'IBC Specialties','Coastal Bend Containers'
 ];
 
 let msalInstance   = null;
@@ -3952,6 +3954,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("advatech")) return "advatech_houston";
   if (v.includes("kp pallet") || v.includes("kppallet")) return "kp_rockyriver";
   if (v.includes("ibc specialties")) return "ibc_gastonia";
+  if (v.includes("coastal bend")) return "cbc_robstown";
   // Sheet-name fallbacks for when the vendor column is blank or uses a short name
   if (sheet) {
     const s = sheet.toLowerCase();
@@ -3967,6 +3970,7 @@ function matchVendorKey(v, sheet) {
     if (s.includes("advatech")) return "advatech_houston";
     if (s.includes("kp pallet") || s.includes("kppallet")) return "kp_rockyriver";
     if (s.includes("ibc specialties")) return "ibc_gastonia";
+    if (s.includes("coastal bend")) return "cbc_robstown";
   }
   return "";
 }
