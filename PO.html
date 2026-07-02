@@ -580,6 +580,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="kp_rockyriver">KP Pallet &amp; Packaging — Cleveland, OH</option>
             <option value="ibc_gastonia">IBC Specialties — Gastonia, NC</option>
             <option value="cbc_robstown">Coastal Bend Containers — Robstown, TX</option>
+            <option value="coastal_alvin_orders">Coastal Container Services — Alvin, TX (Regular Orders)</option>
           </optgroup>
         </select>
       </div>
@@ -761,7 +762,8 @@ const VENDORS = {
   sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; bailey@stsindiana.com; april@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
   centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
-  coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum recycling only.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
+  coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum Recycling Service only (imports from MPH Recycling Drums file). For regular container orders see the 'coastal_alvin_orders' vendor entry.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
+  coastal_alvin_orders:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; orders@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Regular container orders (imports from MPH Orders file, 'Coastal Container' tab). Separate from the Drum Recycling Service entry ('coastal_alvin') so CC lists don't cross over.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"",price:""}]},
   gjl_sts:{name:"GJL",address:"",contact:"Tony Suen",phone:"",email:"tsuc.ibc@gmail.com; michael@ac-ibc.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   engy_houston:{name:"ENGY Container Products",address:"2425 Mowery Rd\nHouston, TX 77045",contact:"",phone:"",email:"customerservice@engycontainers.com; pmckelvy@engycontainers.com; gcervantes@engygrp.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   presley_sikeston:{name:"Presley Enterprises",address:"1101 School St\nSikeston, MO 63801",contact:"Kevin Presley",phone:"",email:"kevin@presleyent.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
@@ -2022,7 +2024,7 @@ const VENDOR_SHEETS = [
   'Basco','Container Connectionz','Tri-Sure','EMP(Enterprise Marking Product)',
   'Presley Enterprises','ENGY Container Products','ECO Green','CPP',
   'KP Pallet & Packaging','Advatech',
-  'IBC Specialties','Coastal Bend Containers'
+  'IBC Specialties','Coastal Bend Containers','Coastal Container'
 ];
 
 let msalInstance   = null;
@@ -2750,7 +2752,7 @@ async function loadSelectedOrder() {
   const _wd = parseToInputDate(o.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   document.getElementById("specialInstructions").value = o.po_notes || "";
-  const vk = matchVendorKey(o.vendor, o.sheet);
+  const vk = matchVendorKey(o.vendor, o.sheet, o.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
   if (o.freight) {
     const el = document.getElementById("shipVia");
@@ -2839,7 +2841,7 @@ async function loadAsSplitLoad() {
   document.getElementById("specialInstructions").value = splitNotesText;
 
   // Vendor from first order
-  const vk = matchVendorKey(o1.vendor, o1.sheet);
+  const vk = matchVendorKey(o1.vendor, o1.sheet, o1.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
   // Freight from first order
@@ -2940,7 +2942,7 @@ async function loadSplitAndGenerateMultiple() {
   document.getElementById("specialInstructions").value = splitNotesText;
 
   // Vendor from first order
-  const vk = matchVendorKey(o1.vendor, o1.sheet);
+  const vk = matchVendorKey(o1.vendor, o1.sheet, o1.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
   // Freight from first order
@@ -3013,7 +3015,7 @@ async function loadSplitAndRegular() {
   const regularRaw = importFiltered[regularIdxs[0]]; // use first regular row
   const pp = s => parseFloat(parseNum(s)) || 0;
 
-  const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
+  const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet, splitRaws[0].source);
   const vendor = VENDORS[vk] || { name: splitRaws[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
 
   // Auto-blind for vendors in BLIND_VENDOR_KEYS (mirrors loadVendor logic since
@@ -3171,7 +3173,7 @@ async function generateMultiplePOs(fromCheckbox = false) {
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const pp = s => parseFloat(parseNum(s)) || 0;
 
-  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
+  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet, rawOrders[0].source);
   const vendor = VENDORS[vk] || { name: rawOrders[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
 
   // Reset checkboxes only when loading fresh orders from the import panel
@@ -3295,8 +3297,8 @@ async function loadAsMultiShipTo(fromCheckbox = false) {
   const o1 = rawOrders[0];
 
   // ── Vendor consistency guard ──
-  const vKey0 = matchVendorKey(o1.vendor || '', o1.sheet || '');
-  const vKeys = rawOrders.map(o => matchVendorKey(o.vendor || '', o.sheet || ''));
+  const vKey0 = matchVendorKey(o1.vendor || '', o1.sheet || '', o1.source);
+  const vKeys = rawOrders.map(o => matchVendorKey(o.vendor || '', o.sheet || '', o.source));
   if (vKeys.some(k => k !== vKey0)) {
     showToast('All selected rows must share the same vendor for a Multi Ship-To load. Adjust your selection.', 6000);
     return;
@@ -3756,7 +3758,7 @@ async function loadAsWashReturn() {
   const pp = s => parseNum(s);
 
   // Vendor from first order
-  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
+  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet, rawOrders[0].source);
   const vendor = vk ? VENDORS[vk] : null;
   if (!vendor) { alert("Could not match a vendor for this Wash & Return order. Please verify the vendor on order 1."); return; }
 
@@ -3913,7 +3915,7 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
   return h;
 }
 
-function matchVendorKey(v, sheet) {
+function matchVendorKey(v, sheet, source) {
   // Sheet-name takes precedence for the two UCG-Hillsboro plants because
   // both share the same Vendor column value ("UCG (United Container Group) - Hillsboro, TX").
   // Without this, every UCG row would route to ucg_hillsboro and Bottles orders would be misrouted.
@@ -3946,7 +3948,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("centurion") && v.includes("lewisburg")) return "centurion_lewisburg";
   if (v.includes("centurion") && v.includes("memphis")) return "centurion_memphis";
   if (v.includes("coastal bend")) return "cbc_robstown";
-  if (v.includes("coastal")) return "coastal_alvin";
+  if (v.includes("coastal")) return source === 'recycling' ? "coastal_alvin" : "coastal_alvin_orders";
   if (v.includes("eco green") || v.includes("ecogreen")) return "ecog_houston";
   if (v.includes("basco")) return "basco";
   if (v.includes("cpp") || v.includes("cpp-usa") || v.includes("cpp usa")) return "cpp_lakewales";
@@ -3974,6 +3976,7 @@ function matchVendorKey(v, sheet) {
     if (s.includes("kp pallet") || s.includes("kppallet")) return "kp_rockyriver";
     if (s.includes("ibc specialties")) return "ibc_gastonia";
     if (s.includes("coastal bend")) return "cbc_robstown";
+    if (s.includes("coastal")) return source === 'recycling' ? "coastal_alvin" : "coastal_alvin_orders";
   }
   return "";
 }
