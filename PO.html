@@ -1213,6 +1213,9 @@ async function generatePO(silent = false) {
   const vendorKey = document.getElementById('vendorSelect').value;
   if (!customerName) { if (!silent) alert('Please select or enter a customer name.'); return; }
   if (!vendorKey) { if (!silent) alert('Please select a vendor.'); return; }
+  if (!document.getElementById('shipDate').value && !silent) {
+    if (!confirm('⚠ No Ship Date is set.\n\nGenerate the PO anyway with Ship Date shown as "--"?')) return;
+  }
 
   const vendor = VENDORS[vendorKey];
   const lines = getLines();
@@ -2717,6 +2720,52 @@ function updateImportFooter() {
   }
 }
 
+// ── FORM RESET & IMPORT HELPERS ─────────────────────────────────────────────
+// Clears every order-specific field so nothing carries over from a previously
+// loaded PO. Called at the top of every import-load flow. Blank in Excel must
+// mean blank on the PO — never inherited from the last order.
+function resetOrderForm() {
+  ["customerPO","partNumber","salesOrder","apptTime","shipDate","etaDate",
+   "shipTo","customerEmail","specialInstructions","revisedPONum"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("isMoveOrders").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  lastLoadedMphPO = "";
+  // Ship Via: drop any custom option added by a previous import, back to default
+  const sv = document.getElementById("shipVia");
+  Array.from(sv.options).forEach(op => { if (op.dataset.custom) op.remove(); });
+  sv.selectedIndex = 0;
+}
+
+// Sets Ship Via from the imported Freight cell. Custom (non-matching) carriers
+// are added as a tagged option so resetOrderForm can remove them later instead
+// of letting them pile up in the dropdown.
+function setShipViaFromFreight(freight) {
+  if (!freight) return;
+  const el = document.getElementById("shipVia");
+  const f = freight.toLowerCase();
+  const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(f) || f.includes(op.value.toLowerCase()));
+  if (m) { el.value = m.value; return; }
+  const n = document.createElement("option");
+  n.value = freight; n.textContent = freight; n.dataset.custom = "1";
+  el.appendChild(n); el.value = freight;
+}
+
+// Sets Ship Date from the imported cell. If missing or unparseable, the field
+// is left BLANK (never inherits the previous order's date) and a warning pops.
+function setShipDateField(raw) {
+  const d = parseToInputDate(raw);
+  document.getElementById("shipDate").value = d || "";
+  if (!d) {
+    showToast(raw
+      ? "⚠ Ship Date \"" + raw + "\" couldn't be read from Excel — please enter it manually."
+      : "⚠ No Ship Date on the imported order — please enter it manually.", 8000);
+  }
+}
+
 async function loadSelectedOrder() {
   if (importSelectedIdxs.length === 0) return;
   // Clear any leftover multi-PO output
@@ -2726,40 +2775,27 @@ async function loadSelectedOrder() {
   multiPOEmailData = null;
   const o = importFiltered[importSelectedIdxs[0]];
   currentOrderIsCoastal = (o.source === 'recycling' && o.sheet === 'Coastal Container');
-  document.getElementById("isBlindShipment").checked = false;
-  document.getElementById("isRevised").checked = false;
-  document.getElementById("isMoveOrders").checked = false;
-  document.getElementById("revisedPOField").style.display = "none";
-  document.getElementById("revisedPONum").value = "";
+  resetOrderForm();
   document.getElementById("customerSearch").value = o.customer||"";
   document.getElementById("selectedCustomerName").value = o.customer||"";
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o.customer||"").toLowerCase());
   if (cm) { selectCustomer(cm.name); }
   else {
-    if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
-    if (o.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o.contacts).email;
+    document.getElementById("customerEmail").value = o.contacts ? parseCustomerContacts(o.contacts).email : "";
     document.getElementById("customerCard").classList.remove("active");
   }
-  if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
+  document.getElementById("customerPO").value = o.cust_po || "";
   lastLoadedMphPO = o.mph_po || '';
-  if (document.getElementById('isRevised').checked && lastLoadedMphPO) {
-    document.getElementById('revisedPONum').value = lastLoadedMphPO;
-  }
-  if (o.pn) document.getElementById("partNumber").value = o.pn;
-  if (o.alliance_so) document.getElementById("salesOrder").value = o.alliance_so;
-  if (o.appt) document.getElementById("apptTime").value = o.appt;
-  const _sd = parseToInputDate(o.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
-  const _wd = parseToInputDate(o.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
+  document.getElementById("partNumber").value = o.pn || "";
+  document.getElementById("salesOrder").value = o.alliance_so || "";
+  document.getElementById("apptTime").value = o.appt || "";
+  setShipDateField(o.ship_date);
+  const _wd = parseToInputDate(o.wanted_date); document.getElementById("etaDate").value = _wd || "";
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   document.getElementById("specialInstructions").value = o.po_notes || "";
   const vk = matchVendorKey(o.vendor, o.sheet, o.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
-  if (o.freight) {
-    const el = document.getElementById("shipVia");
-    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o.freight.toLowerCase()) || o.freight.toLowerCase().includes(op.value.toLowerCase()));
-    if (m) el.value = m.value;
-    else { const n=document.createElement("option"); n.value=o.freight; n.textContent=o.freight; el.appendChild(n); el.value=o.freight; }
-  }
+  setShipViaFromFreight(o.freight);
   const body = document.getElementById("lineBody");
   body.innerHTML = "";
   const ck = isCore(vk);
@@ -2794,11 +2830,7 @@ async function loadAsSplitLoad() {
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const o1 = rawOrders[0];
   const pp = s => parseNum(s);
-  document.getElementById("isBlindShipment").checked = false;
-  document.getElementById("isRevised").checked = false;
-  document.getElementById("isMoveOrders").checked = false;
-  document.getElementById("revisedPOField").style.display = "none";
-  document.getElementById("revisedPONum").value = "";
+  resetOrderForm();
 
   // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer||"";
@@ -2806,22 +2838,18 @@ async function loadAsSplitLoad() {
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o1.customer||"").toLowerCase());
   if (cm) { selectCustomer(cm.name); }
   else {
-    if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
-    if (o1.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o1.contacts).email;
+    document.getElementById("customerEmail").value = o1.contacts ? parseCustomerContacts(o1.contacts).email : "";
     document.getElementById("customerCard").classList.remove("active");
   }
 
   // Header fields from first order
-  if (o1.cust_po) document.getElementById("customerPO").value = o1.cust_po;
+  document.getElementById("customerPO").value = o1.cust_po || "";
   lastLoadedMphPO = o1.mph_po || '';
-  if (document.getElementById('isRevised').checked && lastLoadedMphPO) {
-    document.getElementById('revisedPONum').value = lastLoadedMphPO;
-  }
-  if (o1.pn) document.getElementById("partNumber").value = o1.pn;
-  if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
-  if (o1.appt) document.getElementById("apptTime").value = o1.appt;
-  const _sd2 = parseToInputDate(o1.ship_date); if (_sd2) document.getElementById("shipDate").value = _sd2;
-  const _wd2 = parseToInputDate(o1.wanted_date); if (_wd2) document.getElementById("etaDate").value = _wd2;
+  document.getElementById("partNumber").value = o1.pn || "";
+  document.getElementById("salesOrder").value = o1.alliance_so || "";
+  document.getElementById("apptTime").value = o1.appt || "";
+  setShipDateField(o1.ship_date);
+  const _wd2 = parseToInputDate(o1.wanted_date); document.getElementById("etaDate").value = _wd2 || "";
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
   // Notes: if all non-empty notes are identical, show once; otherwise label by load number
@@ -2845,12 +2873,7 @@ async function loadAsSplitLoad() {
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
   // Freight from first order
-  if (o1.freight) {
-    const el = document.getElementById("shipVia");
-    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o1.freight.toLowerCase()) || o1.freight.toLowerCase().includes(op.value.toLowerCase()));
-    if (m) el.value = m.value;
-    else { const n=document.createElement("option"); n.value=o1.freight; n.textContent=o1.freight; el.appendChild(n); el.value=o1.freight; }
-  }
+  setShipViaFromFreight(o1.freight);
 
   // One line item per selected order, labeled SPLIT LOAD N
   const body = document.getElementById("lineBody");
@@ -2899,11 +2922,7 @@ async function loadSplitAndGenerateMultiple() {
   setLoading(false);
 
   // ── Populate the PO builder exactly like loadAsSplitLoad ──
-  document.getElementById("isBlindShipment").checked = false;
-  document.getElementById("isRevised").checked = false;
-  document.getElementById("isMoveOrders").checked = false;
-  document.getElementById("revisedPOField").style.display = "none";
-  document.getElementById("revisedPONum").value = "";
+  resetOrderForm();
 
   // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer || "";
@@ -2911,20 +2930,19 @@ async function loadSplitAndGenerateMultiple() {
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o1.customer || "").toLowerCase());
   if (cm) { selectCustomer(cm.name); }
   else {
-    if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
-    if (o1.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o1.contacts).email;
+    document.getElementById("customerEmail").value = o1.contacts ? parseCustomerContacts(o1.contacts).email : "";
     document.getElementById("customerCard").classList.remove("active");
   }
 
   // Header fields — join all customer POs for multi-number split loads
   const custPOs = rawOrders.map(o => o.cust_po).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
-  if (custPOs.length) document.getElementById("customerPO").value = custPOs.join(" / ");
+  document.getElementById("customerPO").value = custPOs.join(" / ");
   lastLoadedMphPO = o1.mph_po || '';
-  if (o1.pn) document.getElementById("partNumber").value = o1.pn;
-  if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
-  if (o1.appt) document.getElementById("apptTime").value = o1.appt;
-  const _sd = parseToInputDate(o1.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
-  const _wd = parseToInputDate(o1.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
+  document.getElementById("partNumber").value = o1.pn || "";
+  document.getElementById("salesOrder").value = o1.alliance_so || "";
+  document.getElementById("apptTime").value = o1.appt || "";
+  setShipDateField(o1.ship_date);
+  const _wd = parseToInputDate(o1.wanted_date); document.getElementById("etaDate").value = _wd || "";
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
   // Notes: if all non-empty notes are identical show once, otherwise label by load
@@ -2946,12 +2964,7 @@ async function loadSplitAndGenerateMultiple() {
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
   // Freight from first order
-  if (o1.freight) {
-    const el = document.getElementById("shipVia");
-    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o1.freight.toLowerCase()) || o1.freight.toLowerCase().includes(op.value.toLowerCase()));
-    if (m) el.value = m.value;
-    else { const n = document.createElement("option"); n.value = o1.freight; n.textContent = o1.freight; el.appendChild(n); el.value = o1.freight; }
-  }
+  setShipViaFromFreight(o1.freight);
 
   // One line item per selected order, labeled SPLIT LOAD N
   const body = document.getElementById("lineBody");
