@@ -554,6 +554,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="sec_cleveland">SEC SouthEast Container — Cleveland, MS (275)</option>
             <option value="gpc_gardencity">GPC Great Plains — Garden City, KS (135/275/330)</option>
             <option value="sts_greenwood">STS Superior Tote — Greenwood, IN (275/330)</option>
+            <option value="sts_calhoun">STS Superior Tote — Calhoun, GA (275/330 Rebottle & Washout)</option>
             <option value="ucg_hillsboro">UCG (United Container Group) - IBCS — Hillsboro, TX (275/330)</option>
             <option value="ttw_odessa">TTW Texas Tote Works — Odessa, TX (275/330)</option>
             <option value="tld_socal">TLD Ted Levine Drum — South El Monte, CA</option>
@@ -763,7 +764,8 @@ const VENDORS = {
   rrg_stanwood:{name:"MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA",address:"101 Forest Street\nStanwood, IA 52337",contact:"Michelle McCall",phone:"319.360.4571",email:"michelle@mphunited.com; lmccall@recyclinggrinding.com; orders@mphunited.com",dockHours:"",dockContact:"Michelle McCall admin@recyclinggrinding.com 319.360.4571",notes:"Rebottle 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""}]},
   clean_stlouis:{name:"MPH United / Clean Environmental -- St. Louis, MO",address:"4500 Fyler Ave\nSt. Louis, MO 63116",contact:"Tommy Hudson / Breana Rice",phone:"513-652-1903 / 314-775-1779",email:"brice@cleanenvironmentalmanagementllc.com; ghudson@cleanenvironmentalmanagementllc.com; orders@mphunited.com",dockHours:"(!) EMAIL BREANA (not Tommy). Mon-Thurs 6:30am-1:30pm. Friday by approval only 6:30-10:30am. Warehouse UNMANNED as of Aug 2025.",dockContact:"Tommy Hudson 513-652-1903",notes:"Washout & Rebottle 275 & 330, 55 gal TH poly drums. Secondary unmanned location: 3211 S Kingshighway Blvd -- must call before delivery.",leadContact:"Suzanne Ridenhour 251.413.6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"55 Gal TH Poly Drum -- Washout",price:""}]},
   responsible_stlouis:{name:"MPH United / Responsible Container -- St. Louis, MO",address:"5300 Hall Street\nSt. Louis, MO 63147",contact:"Samantha Hill",phone:"314-241-5108",email:"customersupport@responsiblecontainer.com; orders@mphunited.com",dockHours:"(!) BY APPOINTMENT ONLY. Dock Hours: Mon-Thurs 7am-2pm / Friday 7am-11:00am. Email customersupport@responsiblecontainer.com to schedule.",dockContact:"Samantha Hill 314-241-5108 customersupport@responsiblecontainer.com",notes:"Rebottle & Washout 275 & 330. (Products list unconfirmed -- verify with Samantha Hill.)",leadContact:"",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
-  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; bailey@stsindiana.com; april@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
+  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; april@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
+  sts_calhoun:{name:"MPH United / STS Superior Tote Solutions -- Calhoun, GA",address:"129 Nance Road NE\nCalhoun, GA 30701",contact:"Julie Tims",phone:"404-274-5089",email:"julie@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"7:30am-3pm, Mon-Fri. No appt required.",dockContact:"Julie Tims julie@stsindiana.com 404-274-5089\nDock Times: 7:30am – 3pm, Mon-Fri, No appt required",notes:"Rebottle & Washout 275 & 330.",leadContact:"Keith Ferrell",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum Recycling Service only (imports from MPH Recycling Drums file). For regular container orders see the 'coastal_alvin_orders' vendor entry.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
@@ -805,6 +807,7 @@ const VENDOR_GREETINGS = {
   "MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA": "Michelle",
   "MPH United / Clean Environmental -- St. Louis, MO":        "Breana",
   "MPH United / STS Superior Tote Solutions -- Summitville, IN": "Kelly",
+  "MPH United / STS Superior Tote Solutions -- Calhoun, GA":  "STS-Calhoun, GA",
   "MPH United / Centurion -- Lewisburg, TN":                  "Clint",
   "MPH United / Centurion -- Memphis, TN":                    "Clint",
   "MPH United / Coastal Container Services -- Alvin, TX":     "Coastal Container",
@@ -2025,7 +2028,7 @@ const VENDOR_SHEETS = [
   'Core-IBCS','Core-Bottles','Alliance-Greenwood','UCG-Bottles',
   'UCG-IBCS','5 Star','GPC(Great Plains-Garden City)','Ted Levine Drum Co',
   'TTW(Texas Tote Works)','SEC(SouthEast Container)','Clean Environmental',
-  'RRG(Rural Recycling Grinding)','STS(Superior Tote Solutions)','Centurion',
+  'RRG(Rural Recycling Grinding)','STS(Superior Tote Solutions)','STS-Calhoun, GA','Centurion',
   'Responsible Container',
   'FSC(Four Seasons Containers)','EFC(Eagle Ford Containers)',
   'GPCN(Great Plains Northstar-SD)','AgTank Solutions-Pumps',
@@ -3944,6 +3947,7 @@ function matchVendorKey(v, sheet, source) {
     const s0 = sheet.toLowerCase();
     if (s0 === "ucg-bottles") return "alliance_hillsboro";
     if (s0 === "ucg-ibcs")    return "ucg_hillsboro";
+    if (s0 === "sts-calhoun, ga") return "sts_calhoun";
   }
   if (!v) return "";
   v = v.toLowerCase();
